@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Knowledge Base Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  /* Sanity UI tokens: @sanity/color 3.0.8 palette, @sanity/ui 4.2.6 theme (Inter, radius 3/6, 4px space grid) */
+  --bg:#f6f6f8; --surface:#ffffff; --surface-2:#eeeef1; --ink:#252837; --ink-2:#515870; --muted:#727892;
+  --line:#e3e4e8; --line-2:#bbbdc9; --accent:#556bfc; --accent-soft:#e5edff; --accent-ink:#ffffff;
+  --warn:#965908; --warn-soft:#fcf3bb; --drop:#bbbdc9; --sanity:#ef4434; --sanity-soft:#ffe7e5; --ok:#01794f; --ok-soft:#c5fce8;
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --r:6px; --r-sm:3px; --shadow:0 0 0 1px rgba(37,40,55,.04),0 6px 20px -8px rgba(37,40,55,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#13141b; --surface:#1b1d27; --surface-2:#252837; --ink:#e4e5e9; --ink-2:#bbbdc9; --muted:#9499ad;
+    --line:#2a2d3f; --line-2:#383d51; --accent:#7595ff; --accent-soft:#192457; --accent-ink:#101228;
+    --warn:#f9bc15; --warn-soft:#3b220c; --drop:#515870; --sanity:#f77769; --sanity-soft:#4d1714; --ok:#04b97a; --ok-soft:#023120;
+    --shadow:0 0 0 1px rgba(0,0,0,.2),0 6px 20px -8px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#13141b; --surface:#1b1d27; --surface-2:#252837; --ink:#e4e5e9; --ink-2:#bbbdc9; --muted:#9499ad;
+  --line:#2a2d3f; --line-2:#383d51; --accent:#7595ff; --accent-soft:#192457; --accent-ink:#101228;
+  --warn:#f9bc15; --warn-soft:#3b220c; --drop:#515870; --sanity:#f77769; --sanity-soft:#4d1714; --ok:#04b97a; --ok-soft:#023120;
+  --shadow:0 0 0 1px rgba(0,0,0,.2),0 6px 20px -8px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.46;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--sans);font-size:10.8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;padding-inline:16px;padding-block:0 14px;gap:12px}
+header.top{display:flex;align-items:center;gap:18px;padding-top:14px;flex-wrap:wrap}
+.brand{color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.01em;white-space:nowrap}
+.brand-mark{width:22px;height:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.brand-mark i{border-radius:50%;background:var(--line-2)}
+.brand-mark i.k{background:var(--ink)}
+.panel{display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+main.cols{display:grid;grid-template-columns:minmax(0,32fr) minmax(0,36fr) minmax(0,32fr);gap:12px;min-height:0}
+.panel.center{}
+.phead{display:flex;align-items:center;gap:10px;padding:0 16px;height:48px;border-bottom:1px solid var(--line)}
+.phead h2{margin:0;font-size:14px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phead h2.testing span{color:var(--muted);font-weight:500}
+.phead .eyebrow{white-space:nowrap}
+.pbody{flex:1;min-height:0;overflow:auto;padding:16px}
+
+/* chat */
+.thread{display:flex;flex-direction:column;gap:14px}
+.msg{max-width:100%}
+.msg .who{font-family:var(--sans);font-size:10.8px;font-weight:600;text-transform:uppercase;color:var(--muted);margin-bottom:4px;letter-spacing:.5px}
+.msg.user .bubble{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:9px 11px;display:inline-block}
+.msg.bot .bubble{padding:0}
+.msg p{margin:0 0 8px}
+.msg p:last-child{margin-bottom:0}
+code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 4px;border-radius:3px}
+.intent{margin-top:8px;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-family:var(--mono);font-size:11.5px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;background:var(--surface)}
+.intent dt{color:var(--muted)}
+.intent dd{margin:0;color:var(--ink)}
+.sources{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.src{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:8px 10px}
+.src .d{font-family:var(--mono);font-size:12px;font-weight:500}
+.src .t{grid-column:1;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src .x{grid-row:1/3;grid-column:2;border:0;background:none;color:var(--muted);width:25px;height:25px;border-radius:var(--r-sm);font-size:16px;line-height:1}
+.src .x:hover{background:var(--surface-2);color:var(--ink)}
+.src.skip{border-style:dashed}
+.src.skip .t{color:var(--warn)}
+.locked .src .x{display:none}
+.addrow{display:flex;gap:6px;margin-top:6px}
+.addrow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:7px 9px;font-family:var(--mono);font-size:12px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:7px 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--bg);border-color:var(--line-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default;filter:none}
+.btn.sm{padding:4px 8px;font-size:12px}
+.buildrow{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.composer{border-top:1px solid var(--line);padding:10px;display:flex;gap:8px}
+.composer input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:9px 10px}
+.suggest{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.suggest button{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:5px 10px;font-size:12px;color:var(--ink-2);text-align:left}
+.suggest button:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.retr{display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:6px}
+.retr .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+details.cites{margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+details.cites summary{cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--muted)}
+details.cites ul{margin:6px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+details.cites li{font-size:12px;color:var(--ink-2)}
+details.cites li b{font-weight:500;color:var(--ink)}
+.caret{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:-2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* center */
+.build{border:1px solid var(--line);border-radius:var(--r);background:var(--bg)}
+.bhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bhead .title{font-weight:600;font-size:13.5px}
+.state{font-size:12px;color:var(--muted);white-space:nowrap}
+.state.live{color:var(--accent)}
+.state.ready{color:var(--muted)}
+.ctrls{display:flex;gap:6px;align-items:center}
+.mapwrap{position:relative}
+canvas#map{display:block;width:100%;height:360px}
+.stageline{font-size:12px;color:var(--ink-2)}
+.below{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);border-top:1px solid var(--line)}
+.insp{padding:10px 12px;border-right:1px solid var(--line);min-height:128px}
+.insp .lbl{font-size:13px;font-weight:500;margin:6px 0 8px;text-wrap:balance;min-height:38px}
+.insp dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-family:var(--mono);font-size:11.5px}
+.insp dt{color:var(--muted)}
+.insp dd{margin:0}
+.dec-keep{color:var(--accent);font-weight:500}
+.dec-uncertain{color:var(--warn);font-weight:500}
+.dec-drop{color:var(--muted)}
+.log{padding:10px 12px;font-family:var(--mono);font-size:10.5px;color:var(--ink-2);overflow:hidden}
+.log ol{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.log li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log li .ty{color:var(--ink)}
+.funnel{padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.atitle{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.atitle .title{font-weight:600;font-size:14px}
+.mapwrap{background:var(--bg);border-radius:var(--r);padding-top:4px}
+.maprow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;margin-top:8px}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.lg{width:10px;height:10px;border-radius:2px;display:inline-block}
+.lg.k{background:var(--accent)} .lg.u{background:var(--accent-soft);box-shadow:inset 0 0 0 1.2px var(--accent)} .lg.d{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.phead .btn{margin-left:auto}
+.fline{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;color:var(--muted);font-size:12px}
+.fline b{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.fline .ar{color:var(--line-2)}
+.fline .unit{margin-left:auto}
+.track{position:relative;height:6px;border-radius:var(--r-sm);background:var(--surface-2);overflow:hidden}
+.track .bar{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .5s ease}
+.bar.r{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.bar.s{background:var(--accent)}
+.fnote{margin:0;font-size:12.5px;color:var(--ink-2)}
+.fnote b{color:var(--ink);font-weight:600}
+.kbhead{display:flex;justify-content:space-between;align-items:baseline;margin-top:24px}
+.kbhead h3{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--muted)}
+.kbhead .hint{font-size:12px;color:var(--muted)}
+.kbs{display:flex;flex-direction:column;margin-top:4px;border-top:1px solid var(--line)}
+.kb{border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%;padding:10px 8px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;border-radius:0}
+.kb:hover{background:var(--bg)}
+.kb .n{font-weight:500;font-size:13px}
+.kb .id{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.kb .m{grid-column:1/3;font-size:12px;color:var(--muted)}
+.kb.sel .n{font-weight:600;color:var(--accent)}
+.kb.sel .n::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:2px}
+.kb-new{animation:rise .5s ease}
+@keyframes rise{from{transform:translateY(-6px);opacity:.3}to{transform:none;opacity:1}}
+
+.nav{display:flex;gap:4px;margin-left:8px}
+.nav a{color:var(--muted);text-decoration:none;font-weight:500;padding:6px 10px;border-radius:var(--r-sm)}
+.nav a:hover{color:var(--ink);background:var(--surface-2)}
+.nav a[aria-current="page"]{color:var(--ink);background:var(--surface)}
+.nav .count{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:2px}
+.name{display:flex;align-items:baseline;gap:4px;min-width:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.name input{font:inherit;letter-spacing:inherit;color:var(--ink);border:0;border-bottom:1px dashed var(--line-2);background:none;padding:0 1px;min-width:2ch;max-width:100%;border-radius:0}
+.name input:hover{border-bottom-color:var(--accent)}
+.name input:focus{outline:none;border-bottom:1px solid var(--accent)}
+.name input:read-only{border-bottom-color:transparent;cursor:default}
+.name .suffix{white-space:nowrap}
+.phead .hint{margin-left:auto;font-size:12px;color:var(--muted)}
+.dir{margin-top:0;min-height:0;width:100%;max-width:840px;justify-self:center;align-self:start}
+.dlist{max-width:none}
+.app.all main.cols{display:none}
+.tablewrap{overflow-x:auto}
+.toplink{margin-left:auto;color:var(--ink);text-decoration:none;font-weight:500;padding:6px 10px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);white-space:nowrap}
+.toplink:hover{border-color:var(--line-2)}
+.toplink .count{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.byline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:10px;font-size:12.5px;color:var(--ink-2)}
+.byline input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:5px 8px;font-size:12.5px;min-width:0;flex:1 1 140px;max-width:220px}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-size:12.5px;font-weight:500}
+.linkbtn:hover{text-decoration:underline}
+.me{position:relative;margin-left:auto}
+.mepop{position:absolute;right:0;top:calc(100% + 6px);z-index:5;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:6px}
+.mepop label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.mepop label span{font-weight:400;color:var(--muted)}
+.mepop input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:7px 9px;margin-bottom:4px}
+.mepop p{margin:2px 0 4px;font-size:12px;color:var(--muted)}
+.mebtns{display:flex;justify-content:flex-end;gap:6px}
+.dlist{list-style:none;margin:0;padding:0;max-width:760px}
+.dlist li{border-bottom:1px solid var(--line)}
+.dlist li.empty{color:var(--muted);padding:32px 0;border:0}
+.drow{display:grid;grid-template-columns:1fr auto;gap:2px 24px;width:100%;text-align:left;background:none;border:0;padding:14px 8px;border-radius:0}
+.drow:hover{background:var(--bg)}
+.drow .n{font-weight:600;font-size:14px}
+.drow .d{grid-column:1;color:var(--ink-2);font-size:13px}
+.drow .by{grid-column:2;grid-row:1/3;align-self:center;text-align:right;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.drow .by small{display:block;font-size:12px;color:var(--muted)}
+@media (max-width:560px){ .drow{grid-template-columns:1fr} .drow .by{grid-column:1;grid-row:auto;text-align:left} }
+.dtable{width:100%;border-collapse:collapse;font-size:13px}
+.dtable th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:0 12px 8px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+.dtable td{padding:12px 12px 12px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+.dtable td.nm{font-weight:600}
+.dtable td.mono{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.dtable td.muted{color:var(--muted)}
+.dtable td.act{text-align:right;white-space:nowrap}
+.dtable td.empty{color:var(--muted);text-align:center;padding:32px 0}
+.who-cell{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:600;color:#fff;background:var(--muted);flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.you{font-size:11.5px;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.foot{margin-top:20px;font-size:11.5px;color:var(--muted);line-height:1.5}
+.foot a{color:inherit}
+
+@media (max-width:1180px){
+  main.cols{grid-template-columns:minmax(0,27fr) minmax(0,46fr) minmax(0,27fr);gap:10px}
+  .pbody{padding:12px}
+  .below{grid-template-columns:1fr}
+  .insp{border-right:0;border-bottom:1px solid var(--line);min-height:0}
+  .insp .lbl{min-height:0}
+  .log ol li:nth-child(n+5){display:none}
+}
+@media (max-width:900px){
+  .frow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  canvas#map{height:360px}
+  .phead .eyebrow{display:none}
+  .phead .testing .eyebrow{display:inline}
+}
+@media (max-width:720px){
+  .app{height:auto;min-height:100%}
+  main.cols{grid-template-columns:1fr}
+  .panel{min-height:0}
+  #p-build .pbody,#p-test .pbody{max-height:70vh}
+  .pbody{overflow:auto}
+  canvas#map{height:320px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#lab" id="navLab" title="Back to the Lab"><span class="brand-mark" aria-hidden="true"><i></i><i class="k"></i><i></i><i class="k"></i><i></i><i></i><i></i><i class="k"></i><i class="k"></i></span>Knowledge Base Lab</a>
+    <a class="toplink" href="#all" id="navAll"><span id="navAllLabel">All knowledge bases</span> <span class="count" id="navCount"></span></a>
+  </header>
+
+
+  <main class="cols">
+    <!-- LEFT -->
+    <section class="panel" id="p-build" aria-label="Build">
+      <div class="phead"><h2>Build</h2></div>
+      <div class="pbody" id="buildScroll"><div class="thread" id="bThread"></div></div>
+      <form class="composer" id="bForm"><input id="bInput" placeholder="Describe a knowledge base, or paste URLs" autocomplete="off"><button class="btn" type="submit">Send</button></form>
+    </section>
+
+    <!-- CENTER -->
+    <section class="panel center" id="p-kb" aria-label="Knowledge Bases">
+      <div class="phead"><h2>Knowledge map</h2><button class="btn sm" id="skipBtn" type="button" disabled>Skip to end</button></div>
+      <div class="pbody">
+        <div class="atitle"><label class="name"><input id="kbName" value="Jev" size="3" maxlength="40" spellcheck="false" aria-label="Knowledge base name" autocomplete="off"><span class="suffix">Knowledge Base</span></label><span class="state" id="bState">awaiting sources</span></div>
+        <div class="mapwrap"><canvas id="map" aria-label="Knowledge map: source chunks, Jev keep or drop decisions, and the resulting knowledge base sections"></canvas></div>
+        <div class="maprow"><span class="stageline" id="stageLine">3 sources proposed · waiting for confirmation</span><span class="legend" aria-label="Legend"><span><i class="lg k"></i>kept</span><span><i class="lg u"></i>borderline, kept</span><span><i class="lg d"></i>dropped</span></span></div>
+        <div class="funnel">
+          <div class="fline"><span><b id="fC">—</b> source</span><span class="ar" aria-hidden="true">→</span><span><b id="fR">—</b> kept by Jev</span><span class="ar" aria-hidden="true">→</span><span><b id="fS">—</b> synthesized</span><span class="unit">tokens</span></div>
+          <div class="track" aria-hidden="true"><div class="bar r" id="bR"></div><div class="bar s" id="bS"></div></div>
+        </div>
+
+                        <p class="foot">Prototype replaying a recorded run. Token counts, relevance scores and KB IDs are sample values. Jev facts from <a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev" target="_blank" rel="noopener">TypeSafe</a>, <a href="https://openrouter.ai/docs/guides/community/jev" target="_blank" rel="noopener">OpenRouter</a> and <a href="https://simonwillison.net/2026/Sep/21/jev/" target="_blank" rel="noopener">Simon Willison</a>.</p>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="panel" id="p-test" aria-label="Test">
+      <div class="phead"><h2>Test the knowledge base</h2><span id="tName" hidden></span></div>
+      <div class="pbody" id="testScroll"><div class="thread" id="tThread"></div></div>
+      <form class="composer" id="tForm"><input id="tInput" placeholder="Ask the knowledge base" autocomplete="off"><button class="btn primary" type="submit">Ask</button></form>
+    </section>
+  </main>
+
+  <section class="panel dir" id="p-all" aria-label="All knowledge bases" hidden>
+    <div class="phead"><h2>All knowledge bases</h2><span class="hint" id="dirMeta"></span></div>
+    <div class="pbody">
+      <ul class="dlist" id="dirBody"><li class="empty">Loading…</li></ul>
+      <p class="foot" id="dirNote"></p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fmt = n => n.toLocaleString('en-US');
+const fk = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n);
+
+/* ---------- recorded scenario ---------- */
+const SOURCES = [
+  { id:'ts', domain:'typesafe.ai', title:'Introducing System One Models & Jev', url:'https://typesafe.ai/blog/introducing-system-one-models-and-jev', chunks:[
+    ['What a System One model is',1180,.97],['Kahneman framing: fast vs. slow thinking',940,.62],['Type-safe outputs from predefined choices',1210,.95],
+    ['Calibrated probabilities and confidence',1020,.93],['Latency: 70–500 ms end to end',860,.91],['Pricing: $0.042/MTok input, free output',780,.96],
+    ['Use cases: conditionals, map-reduce, guardrails',1140,.88],['Limits: no images, 255 choices, no free text',920,.94],
+    ['Early-access signup and team bio',1340,.08],['Site navigation, newsletter, footer',1480,.02],['Benchmark chart captions',1260,.31] ]},
+  { id:'or', domain:'openrouter.ai', title:'Jev docs: TypeSafe decision model on OpenRouter', url:'https://openrouter.ai/docs/guides/community/jev', chunks:[
+    ['Model ID typesafe/jev-1.13 and latest alias',640,.95],['Decisions API vs. System One API',1090,.93],['Question primitives: Choice, Noul, Score',1350,.98],
+    ['Response fields and usage.cost',870,.89],['32,000-token context window',520,.90],['Auth with an OpenRouter API key',480,.84],
+    ['Docs sidebar and navigation',1620,.03],['Generic chat-completions quickstart',1480,.22],['Community guides index',1100,.05],
+    ['General OpenRouter credits and rate limits',980,.55] ]},
+  { id:'sw', domain:'simonwillison.net', title:'Jev introduces a new shape of LLM', url:'https://simonwillison.net/2026/Sep/21/jev/', chunks:[
+    ['"Unstructured state in, typed decisions out"',900,.92],['Price vs. GPT-5 Nano at $0.05/MTok',700,.81],['Questions evaluated in parallel',760,.86],
+    ['Good fits: spam, labeling, ranking, reranking',820,.90],['Caveats: opaque scores, bias risk',1040,.87],['Weak on numbers, dates, adversarial input',760,.85],
+    ['Bay Area city "goodness" experiment',1180,.58],['Unrelated entries in the sidebar',1900,.04],['Comments and tag archive',1250,.06],['Recaps of earlier posts',1420,.18] ]}
+];
+const decide = p => p >= .70 ? 'keep' : p >= .40 ? 'uncertain' : 'drop';
+
+// synthesized KB sections, with provenance back to chunk ids
+const JEV_SECTIONS = [
+  { id:'s1', title:'What Jev is', from:['ts0','ts1','ts2','sw0'], kw:['what','jev','system','one','decision','model','typesafe','is'],
+    text:'Jev is TypeSafe AI\'s first System One model: a decision model that takes text in and returns typed, probabilistic decisions instead of generated text. Outputs come from choices defined in advance, so it cannot produce a type error.' },
+  { id:'s2', title:'Question primitives', from:['or2','ts3','sw0'], kw:['noul','choice','score','primitive','return','returns','output','yes','probability','confidence','question'],
+    text:'Jev has three question primitives. Choice returns the selected option, a probability for each option, and a confidence value. Noul returns the probability of yes. Score returns a probability-weighted position, a probability for each level, and a confidence value. No reasoning or free text is returned.' },
+  { id:'s3', title:'Calling Jev via OpenRouter', from:['or0','or1','or3','or4','or5'], kw:['call','api','openrouter','endpoint','model','id','key','auth','context','window','request','sdk','usage','cost'],
+    text:'Use an OpenRouter API key; no separate TypeSafe account is needed. The model ID is typesafe/jev-1.13, with ~typesafe/jev-latest as an alias. Two surfaces exist: the Decisions API (POST /api/alpha/decisions) and the System One API (POST /api/v1/systemone). Input is text as a state object plus your questions, up to 32,000 tokens. Each response reports its USD cost in usage.cost.' },
+  { id:'s4', title:'Speed and cost', from:['ts4','ts5','sw1','sw2'], kw:['cost','price','pricing','cheap','fast','latency','speed','nano','gpt','token','tokens','parallel','ms'],
+    text:'TypeSafe quotes $0.042 per million input tokens with free output, and end-to-end latency of 70–500 ms. Simon Willison compares the price with GPT-5 Nano at $0.05 per million input tokens. Questions in one call are evaluated in parallel, so a batch takes about as long as a single question.' },
+  { id:'s5', title:'Where Jev fits', from:['ts6','sw3','or9'], kw:['fit','use','case','cases','good','spam','label','labeling','ranking','rerank','reranking','guardrail','classification','when'],
+    text:'Good fits are classification-style decisions: smart conditionals in workflows, map-reduce over large data, verifying or guardrailing LLM output, spam detection, labeling, prioritization, ranking and search reranking.' },
+  { id:'s6', title:'Limits and caveats', from:['ts7','sw4','sw5','sw6'], kw:['limit','limits','caveat','bias','risk','weak','images','dates','numbers','adversarial','opaque','applicant','applicants','job','hiring','ranking','explain'],
+    text:'Jev has no image input yet, a ceiling of 255 choices, and cannot generate free text. Scores come without explanation, so hidden biases can compound; Simon Willison warns against using it to rank job applicants. It also struggles with numbers, dates and adversarial content.' }
+];
+const SCRIPTED_JEV = {
+  'How do I call Jev through OpenRouter?': { secs:['s3','s2'], a:'Create an OpenRouter API key. You don\'t need a separate TypeSafe account. Use the model ID `typesafe/jev-1.13`, or the alias `~typesafe/jev-latest`.\n\nOpenRouter exposes two surfaces: the Decisions API (`POST /api/alpha/decisions`) and the System One API (`POST /api/v1/systemone`). Send text as a state object plus your questions, within a 32,000-token context. Each response reports its cost in USD in `usage.cost`.' },
+  'What does a Noul question return?': { secs:['s2'], a:'A Noul is Jev\'s yes/no primitive. It returns one number: the probability of yes, between 0 and 1.\n\nThe other two primitives are Choice (the selected option, a probability per option, and a confidence value) and Score (a probability-weighted position on a scale, a probability per level, and a confidence value). None of them return reasoning or free text.' },
+  'Is Jev a good fit for ranking job applicants?': { secs:['s6','s5'], a:'The knowledge base says to be careful. Jev suits classification work like spam detection, labeling, prioritization, ranking and search reranking. But it returns only numbers with no explanation, so hidden biases can compound. Simon Willison specifically warns against using it to rank job applicants.\n\nIt also struggles with numbers, dates and adversarial content, which résumés tend to contain.' },
+  'What does Jev cost compared to GPT-5 Nano?': { secs:['s4'], a:'Jev charges $0.042 per million input tokens, and output is free. Simon Willison compares that with GPT-5 Nano at $0.05 per million input tokens.\n\nTypeSafe quotes end-to-end latency of 70–500 ms, and questions in one call run in parallel. OpenRouter\'s docs say to check the model page for current pricing.' }
+};
+
+const MCP_SECTIONS = [
+  { id:'m1', title:'What Context MCP does', kw:['what','context','mcp','does','serve','knowledge','base','mode','select','id'], text:'Sanity Context MCP serves Knowledge Bases in Knowledge Base mode. A client selects a Knowledge Base by its public ID.' },
+  { id:'m2', title:'Read-only, no agent loop', kw:['agent','loop','run','write','writes','read','only','harness','edit'], text:'Context MCP is read-only and does not run the agent loop. You need a separate harness, such as a Mastra agent, that calls it for retrieval.' },
+  { id:'m3', title:'Auth and permissions', kw:['token','auth','permission','viewer','organization','key','secret','browser'], text:'Connect with an organization-level API token that has Context Viewer permission. Keep the token server-side and never expose it to the browser.' }
+];
+const SCRIPTED_MCP = {
+  'Can Context MCP run the agent loop?': { secs:['m2'], a:'No. Context MCP is read-only retrieval and does not run the agent loop. You pair it with a separate harness, such as a Mastra agent, which decides when to query the Knowledge Base and writes the answer.' },
+  'What token does the test agent need?': { secs:['m3'], a:'An organization-level Sanity API token with Context Viewer permission. Keep it on the server; it should never reach client-side JavaScript.' },
+  'How do I pick which Knowledge Base to query?': { secs:['m1'], a:'Run Context MCP in Knowledge Base mode and select the Knowledge Base by its public ID. Switching the ID switches the grounding.' }
+};
+
+/* ---------- state ---------- */
+let active = SOURCES.map(s => ({...s, on:true}));
+let extraUrls = [];
+let phase = 'awaiting';
+let speed = 1, skipping = false, runId = 0;
+const metrics = { cand:0, ret:0, drop:0, synth:0, calls:0 };
+const KBS = [
+  { key:'mcp', title:'Context MCP', template:'mcp', sample:true, purpose:'Answer questions about connecting agents to Knowledge Bases through Context MCP.', id:'kb_41d0e8b6', domains:['sanity.io'], nSrc:2, created:'Today, 09:12', funnel:[21480,9120,3040], sections:MCP_SECTIONS, scripted:SCRIPTED_MCP, mapped:false,
+    history:[['user','Does Context MCP support writes?'],['bot','No. Context MCP is read-only. It retrieves from the selected Knowledge Base, and a separate agent harness handles everything else.',['m2']]] }
+];
+let selected = 'mcp';
+let kbName = 'Jev';
+let kbPurpose = '';
+let me = { name:'', email:'' };
+try{ const m=JSON.parse(localStorage.getItem('kblab.me')||'null'); if(m) me={ name:String(m.name||''), email:String(m.email||'') }; }catch(e){}
+let curId = 'kb_7f3c2a91';
+const full = n => (n||'Untitled').trim()+' Knowledge Base';
+const newId = () => 'kb_'+Array.from(crypto.getRandomValues(new Uint8Array(4)),b=>b.toString(16).padStart(2,'0')).join('');
+function deriveName(text){
+  let t=' '+text.replace(/https?:\/\/\S+/g,' ').replace(/\s+/g,' ')+' ';
+  const m=t.match(/.*\b(?:about|on|covering|around)\s+(.+)$/i); if(m) t=m[1];
+  t=t.replace(/^\s*(please\s+)?(can you\s+)?(make|build|create|give|set up|i want|i need|i'd like)(\s+me)?\s+(a|an|the)?\s*/i,'')
+     .replace(/\b(knowledge ?base|kb)\b.*$/i,'').split(/[,.;!?:()]/)[0].replace(/^(the|a|an)\s+/i,'').trim();
+  if(!t){ const u=text.match(/https?:\/\/([^\/\s]+)/); if(u){ const parts=u[1].replace(/^www\./,'').split('.'); t=parts[Math.max(0,parts.length-2)]; } }
+  const small=new Set(['for','and','of','the','in','on','to','with','a','an','or']);
+  let words=t.split(' ').filter(Boolean).slice(0,5);
+  while(words.length&&small.has(words[words.length-1].toLowerCase())) words.pop();
+  return words.map((w,i)=>/[A-Z]/.test(w.slice(1))||(w.length<=4&&w===w.toUpperCase())?w:(i&&small.has(w.toLowerCase())?w.toLowerCase():w[0].toUpperCase()+w.slice(1))).join(' ');
+}
+const measure=document.createElement('canvas').getContext('2d');
+function fitName(inp){ const cs=getComputedStyle(inp); measure.font=cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily; inp.style.width=Math.ceil(measure.measureText(inp.value||'Name').width+2)+'px'; }
+function setName(n){
+  kbName=n; const inp=$('#kbName'); if(inp.value!==n) inp.value=n; fitName(inp);
+  const ins=document.querySelectorAll('.iname'); if(ins.length) ins[ins.length-1].textContent=full(n);
+}
+
+/* ---------- canvas map ---------- */
+const cv = $('#map'), ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1, C={};
+function readColors(){ const cs=getComputedStyle(document.documentElement); ['bg','surface','surface-2','ink','ink-2','muted','line','line-2','accent','accent-soft','warn','drop','sanity','ok'].forEach(k=>C[k]=cs.getPropertyValue('--'+k).trim()); }
+function resize(){ const r=cv.getBoundingClientRect(); DPR=Math.min(2,devicePixelRatio||1); W=r.width; H=r.height; cv.width=W*DPR; cv.height=H*DPR; layout(); }
+let nodes=[], srcNodes=[], secNodes=[], focusNode=null, highlight=new Set(), coreState='none', gateOn=false;
+
+function initNodes(){
+  nodes=[]; srcNodes=[]; secNodes=[]; focusNode=null; highlight=new Set(); coreState='none'; gateOn=false;
+  active.filter(s=>s.on).forEach(s=>{
+    srcNodes.push({ id:s.id, domain:s.domain, y:0 });
+    s.chunks.forEach((c,i)=>nodes.push({ id:s.id+i, src:s.id, domain:s.domain, label:c[0], tokens:c[1], p:c[2], dec:decide(c[2]), state:'hidden', x:0, y:0, a:0, sz:0, sec:null }));
+  });
+  layout();
+}
+const TOP=40, BOT=12, MAX_SRC=3;
+function geo(){ const pad=12; return { pad, lx:pad, lw:Math.max(80,W*0.44-pad), gx:W*0.5, rx:W*0.56, rw:W*0.44-pad }; }
+function layout(){
+  if(!W) return;
+  const g=geo(), B=(H-TOP-BOT)/MAX_SRC;
+  const sq=12, gap=4, cols=Math.max(4,Math.floor((g.lw+gap)/(sq+gap)));
+  srcNodes.forEach((s,i)=>{
+    s.y=TOP+i*B;
+    nodes.filter(q=>q.src===s.id).forEach((nd,j)=>{ nd.x=g.lx+(j%cols)*(sq+gap)+sq/2; nd.y=s.y+28+Math.floor(j/cols)*(sq+gap)+sq/2; });
+  });
+  secNodes.forEach((sc,i)=>{ sc.y=TOP+6+i*28; });
+}
+function setState(nd,st){ nd.state=st; }
+
+function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function getFont(i){ return i ? 'ui-monospace,SFMono-Regular,Menlo,monospace' : 'Inter,system-ui,sans-serif'; }
+const mono='ui-monospace,SFMono-Regular,Menlo,monospace', sans='Inter,system-ui,sans-serif';
+function pill(x,y,lines,accent){
+  const pad=8, lh=16;
+  const w=Math.max(...lines.map((l,i)=>{ ctx.font=(i?'400 11px ':'500 12px ')+(i?mono:sans); return ctx.measureText(l).width; }))+pad*2;
+  const h=lines.length*lh+pad;
+  let px=x+12, py=y-h/2; if(px+w>W-4) px=x-12-w; px=Math.max(4,px); py=Math.max(4,Math.min(H-h-4,py));
+  roundRect(px,py,w,h,4); ctx.fillStyle=C.surface; ctx.fill(); ctx.lineWidth=1; ctx.strokeStyle=accent||C['line-2']; ctx.stroke();
+  lines.forEach((l,i)=>{ ctx.font=(i?'400 11px ':'500 12px ')+(i?mono:sans); ctx.fillStyle=i?C['ink-2']:C.ink; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(l,px+pad,py+pad/2+lh*i+lh/2); });
+}
+function ellip(t,max){ if(ctx.measureText(t).width<=max) return t; while(t.length>1&&ctx.measureText(t+'…').width>max) t=t.slice(0,-1); return t+'…'; }
+const decWord=d=>d==='keep'?'KEEP':d==='uncertain'?'BORDERLINE · KEPT':'DROP';
+let hover=null;
+
+function frame(now){
+  const k=(reduced||skipping)?1:0.18;
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  const g=geo();
+  // lane headers
+  ctx.textBaseline='alphabetic'; ctx.textAlign='left'; ctx.font='600 11px '+sans;
+  const hdr=(t,x,on,align)=>{ ctx.textAlign=align||'left'; ctx.fillStyle=on?C.accent:C.muted; ctx.fillText(t,x,18); };
+  hdr('1  Sources',g.lx,phase==='fetching');
+  hdr('2  Jev',g.gx,phase==='filtering','center');
+  hdr('3  Knowledge Base',g.rx,['synthesizing','creating','building'].includes(phase));
+  ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(g.lx,26.5); ctx.lineTo(W-g.pad,26.5); ctx.stroke();
+  // gate
+  ctx.setLineDash([3,4]); ctx.strokeStyle=phase==='filtering'?C.accent:C['line-2'];
+  ctx.beginPath(); ctx.moveTo(g.gx+.5,TOP-4); ctx.lineTo(g.gx+.5,H-BOT); ctx.stroke(); ctx.setLineDash([]);
+  // sources + chunks
+  srcNodes.forEach(s=>{
+    const mine=nodes.filter(n=>n.src===s.id), shown=mine.filter(n=>n.state!=='hidden'), kept=mine.filter(n=>['keep','uncertain','merged'].includes(n.state)&&n.dec!=='drop');
+    const decided=mine.filter(n=>['keep','uncertain','drop','merged'].includes(n.state));
+    ctx.font='500 12px '+sans; ctx.textAlign='left'; ctx.fillStyle=C.ink; ctx.fillText(s.domain,g.lx,s.y+14);
+    ctx.font='400 11px '+sans; ctx.fillStyle=C.muted; ctx.textAlign='right';
+    const note=!shown.length?'':decided.length?kept.length+' of '+mine.length+' kept':mine.length+' chunks';
+    ctx.fillText(note,g.lx+g.lw,s.y+14);
+  });
+  const B=(H-TOP-BOT)/MAX_SRC;
+  for(let i=srcNodes.length;i<MAX_SRC;i++){
+    const y=TOP+i*B; ctx.setLineDash([3,3]); ctx.strokeStyle=C['line-2']; ctx.lineWidth=1; roundRect(g.lx+.5,y+4.5,g.lw-1,40,4); ctx.stroke(); ctx.setLineDash([]);
+    const extra=extraUrls[i-srcNodes.length]; let host=''; if(extra){ try{ host=new URL(extra).hostname; }catch(e){ host=extra; } }
+    ctx.font='400 12px '+sans; ctx.textAlign='left'; ctx.fillStyle=C.muted;
+    ctx.fillText(ellip(extra?host+' · skipped in demo':'Open source slot',g.lw-20),g.lx+10,y+28);
+  }
+  const lit=new Set(highlight);
+  if(hover&&hover.kind==='sec') hover.o.from.forEach(f=>lit.add(f));
+  nodes.forEach(n=>{
+    const st=n.state==='merged'?n.dec:n.state;
+    const tA=st==='hidden'?0:st==='drop'?1:1, tS=st==='hidden'?0:st==='focus'?16:12;
+    n.a+=(tA-n.a)*k; n.sz+=(tS-n.sz)*k; if(n.sz<.5) return;
+    const s=n.sz, x=n.x-s/2, y=n.y-s/2;
+    ctx.globalAlpha=n.a;
+    roundRect(x,y,s,s,2);
+    if(st==='keep'){ ctx.fillStyle=C.accent; ctx.fill(); }
+    else if(st==='uncertain'){ ctx.fillStyle=C['accent-soft']; ctx.fill(); ctx.strokeStyle=C.accent; ctx.lineWidth=1.2; ctx.stroke(); }
+    else if(st==='drop'){ ctx.fillStyle=C['surface-2']; ctx.fill(); ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.stroke();
+      ctx.strokeStyle=C.drop; ctx.beginPath(); ctx.moveTo(x+3,y+s-3); ctx.lineTo(x+s-3,y+3); ctx.stroke(); }
+    else if(st==='focus'){ ctx.fillStyle=C.surface; ctx.fill(); ctx.strokeStyle=C.ink; ctx.lineWidth=1.6; ctx.stroke(); }
+    else { ctx.fillStyle=C.surface; ctx.fill(); ctx.strokeStyle=C['line-2']; ctx.lineWidth=1; ctx.stroke(); }
+    if(lit.has(n.id)){ ctx.strokeStyle=C.ink; ctx.lineWidth=1.5; roundRect(x-2.5,y-2.5,s+5,s+5,3); ctx.stroke(); }
+    ctx.globalAlpha=1;
+  });
+  // knowledge base lane
+  ctx.textAlign='left';
+  if(!secNodes.length){
+    ctx.font='400 12px '+sans; ctx.fillStyle=C.muted;
+    const msg=phase==='filtering'?'Kept chunks are synthesized':'Sections appear here after';
+    ctx.fillText(ellip(msg,g.rw),g.rx,TOP+14); ctx.fillText(ellip(phase==='filtering'?'into sections next.':'Jev and synthesis run.',g.rw),g.rx,TOP+30);
+  }
+  const t=performance.now();
+  secNodes.forEach(sc=>{
+    const age=t-(sc.born||0), on=sc.hl||(hover&&hover.kind==='sec'&&hover.o===sc), flash=age<1100&&!skipping;
+    if(on||flash){
+      ctx.strokeStyle=C.accent; ctx.lineWidth=1; ctx.globalAlpha=on?.7:Math.max(0,1-age/1100)*.8;
+      sc.from.forEach(f=>{ const n=nodes.find(q=>q.id===f); if(!n) return; const x0=n.x+7, y0=n.y, x1=g.rx-4, y1=sc.y+9;
+        ctx.beginPath(); ctx.moveTo(x0,y0); ctx.bezierCurveTo((x0+x1)/2,y0,(x0+x1)/2,y1,x1,y1); ctx.stroke(); });
+      ctx.globalAlpha=1;
+    }
+    const ap=Math.min(1,age/300)||1; ctx.globalAlpha=skipping?1:ap;
+    if(on){ roundRect(g.rx-4,sc.y-3,g.rw+4,24,4); ctx.fillStyle=C['accent-soft']; ctx.fill(); }
+    ctx.fillStyle=C.accent; roundRect(g.rx+2,sc.y+5,8,8,2); ctx.fill();
+    ctx.font='400 11px '+sans; ctx.textAlign='right'; ctx.fillStyle=C.muted; const cnt=String(sc.from.length); ctx.fillText(cnt,g.rx+g.rw-2,sc.y+13);
+    ctx.font=(on?'600 ':'500 ')+'12px '+sans; ctx.textAlign='left'; ctx.fillStyle=C.ink; ctx.fillText(ellip(sc.title,g.rw-34),g.rx+16,sc.y+13);
+    ctx.globalAlpha=1;
+  });
+  if(secNodes.length){
+    const y=TOP+6+secNodes.length*28+14; ctx.strokeStyle=C.line; ctx.beginPath(); ctx.moveTo(g.rx,y-10.5); ctx.lineTo(g.rx+g.rw,y-10.5); ctx.stroke();
+    ctx.font='400 11px '+sans; ctx.fillStyle=C.muted; ctx.textAlign='left';
+    ctx.fillText(ellip(coreState==='kb'?'Sanity KB '+curId+' · '+(phase==='ready'?'ready':phase==='building'?'building…':'importing…'):'Synthesizing Markdown…',g.rw),g.rx,y+4);
+    ctx.textAlign='right'; ctx.fillText('chunks',g.rx+g.rw-2,TOP-6+0); 
+  }
+  // focus + hover pills
+  if(focusNode&&focusNode.state==='focus') pill(focusNode.x,focusNode.y,[focusNode.label,'P(yes) '+focusNode.p.toFixed(2)+' · evaluating'],C.ink);
+  if(hover&&hover.kind==='chunk'){ const n=hover.o; pill(n.x,n.y,[n.label,'P(yes) '+n.p.toFixed(2)+' · '+decWord(n.dec)],n.dec==='drop'?C['line-2']:C.accent); }
+  requestAnimationFrame(frame);
+}
+cv.addEventListener('mousemove',e=>{
+  const r=cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, g=geo(); hover=null;
+  for(const sc of secNodes){ if(x>=g.rx-4&&y>=sc.y-3&&y<=sc.y+21){ hover={kind:'sec',o:sc}; break; } }
+  if(!hover&&phase!=='filtering') for(const n of nodes){ if(n.state==='hidden'||n.state==='read') continue; if(Math.abs(n.x-x)<8&&Math.abs(n.y-y)<8){ hover={kind:'chunk',o:n}; break; } }
+  cv.style.cursor=hover?'help':'default';
+});
+cv.addEventListener('mouseleave',()=>hover=null);
+
+/* ---------- chain / status ---------- */
+const ORDER=['web','jev','llm','kb','mcp','agent'];
+function setChain(on,done){ document.querySelectorAll('#chain .st').forEach(el=>{ const s=el.dataset.s; el.classList.toggle('on',s===on); el.classList.toggle('done',done.includes(s)&&s!==on); }); }
+function chainBuild(stage){ const i=ORDER.indexOf(stage); setChain(stage,ORDER.slice(0,i)); }
+let chainRest=()=>setChain(null,[]);
+function setBState(t,cls){ const el=$('#bState'); el.textContent=t; el.className='state'+(cls?' '+cls:''); }
+const stageLine=$('#stageLine');
+function log(){}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function funnel(){
+  const {cand,ret,drop,synth}=metrics;
+  $('#fC').textContent=cand?fk(cand):'—';
+  $('#fR').textContent=(ret||drop)?fk(ret):'—';
+  $('#fS').textContent=synth?fk(synth):'—';
+  $('#bR').style.width=cand?(ret/cand*100)+'%':'0'; $('#bS').style.width=cand?(synth/cand*100)+'%':'0';
+}
+
+/* ---------- pipeline ---------- */
+class Abort extends Error{}
+function sleep(ms,my){ if(my!==runId) throw new Abort(); if(skipping) return Promise.resolve(); return new Promise((res,rej)=>setTimeout(()=>my===runId?res():rej(new Abort()),reduced?Math.min(ms,60):ms/speed)); }
+async function run(instant){
+  const my=++runId; skipping=!!instant;
+  Object.assign(metrics,{cand:0,ret:0,drop:0,synth:0,calls:0});
+  KBS.forEach(k=>k.mapped=false); $('#kbName').readOnly=true;
+  initNodes();
+  $('#skipBtn').disabled=false; $('#skipBtn').textContent='Skip to end';
+  try{
+    phase='fetching'; chainBuild('web'); setBState('fetching','live'); funnel();
+    for(const s of srcNodes){
+      const src=SOURCES.find(q=>q.id===s.id);
+      log('source.fetch.started',src.url.replace('https://','')); stageLine.textContent='Fetching '+s.domain+' · extracting and chunking';
+      await sleep(520,my);
+      let t=0;
+      for(const n of nodes.filter(q=>q.src===s.id)){ setState(n,'read'); t+=n.tokens; await sleep(45,my); }
+      metrics.cand+=t; funnel(); log('source.fetch.finished',s.domain+' tokens='+t);
+    }
+    extraUrls.forEach(u=>log('source.skipped',u+' (not in recorded run)'));
+    await sleep(300,my);
+    phase='filtering'; chainBuild('jev'); setBState('filtering','live'); funnel();
+    const bySrc=srcNodes.map(s=>nodes.filter(n=>n.src===s.id)), order=[];
+    for(let r=0;r<12;r++) bySrc.forEach(a=>{ if(a[r]) order.push(a[r]); });
+    let kept=0,dropped=0;
+    for(const [idx,n] of order.entries()){
+      focusNode=n; setState(n,'focus'); inspector(n,true);
+      await sleep(n.p>=.9?760:400,my);
+      setState(n,n.dec); metrics.calls++; inspector(n,false);
+      if(n.dec==='drop'){ metrics.drop+=n.tokens; dropped++; } else { metrics.ret+=n.tokens; kept++; }
+      log('jev.evaluation',n.id+' '+n.dec+' score='+n.p.toFixed(2)); funnel();
+      stageLine.textContent='Jev · '+(idx+1)+'/'+order.length+' evaluated · '+kept+' kept · '+dropped+' dropped';
+      await sleep(130,my);
+    }
+    focusNode=null; log('jev.complete','retained='+metrics.ret+' dropped='+metrics.drop);
+    phase='synthesizing'; chainBuild('llm'); setBState('synthesizing','live'); coreState='forming'; funnel();
+    stageLine.textContent='LLM synthesis · retained chunks only → Markdown sections';
+    log('synthesis.started','input='+metrics.ret);
+    const ids=new Set(nodes.filter(n=>n.dec!=='drop').map(n=>n.id)), used=new Set();
+    const secs=JEV_SECTIONS.map(s=>({...s,from:s.from.filter(f=>ids.has(f))})).filter(s=>s.from.length);
+    secNodes=[]; const queue=secs.map(s=>({...s,y:0,hl:false,born:0}));
+    for(const sc of queue){
+      sc.born=performance.now(); secNodes.push(sc); layout();
+      for(const f of sc.from){ if(used.has(f)) continue; used.add(f); const n=nodes.find(q=>q.id===f); n.sec=sc.id; setState(n,'merged'); }
+      log('knowledge.cluster.updated',sc.id+' "'+sc.title+'" nodes='+sc.from.length);
+      await sleep(380,my);
+    }
+    metrics.synth=Math.round(metrics.ret*0.3/10)*10; funnel();
+    log('synthesis.complete','outputTokens='+metrics.synth);
+    await sleep(300,my);
+    phase='creating'; chainBuild('kb'); setBState('creating in Sanity','live'); coreState='kb';
+    stageLine.textContent='sanity context create → imports create → build';
+    log('sanity.kb.created',curId); await sleep(800,my);
+    log('sanity.kb.import','markdown '+secNodes.length+' sections'); await sleep(700,my);
+    phase='building'; setBState('building','live'); log('sanity.kb.building',curId); await sleep(1500,my);
+    phase='ready'; log('sanity.kb.ready',curId); setBState('ready','ready');
+    setChain(null,['web','jev','llm','kb']); chainRest=()=>setChain(null,['web','jev','llm','kb']);
+    stageLine.textContent=secNodes.length+' sections · hover the map to inspect decisions';
+    skipping=false; $('#skipBtn').textContent='New build';
+    const now=new Date();
+    const rec={ key:curId, title:kbName, purpose:kbPurpose, makerName:me.name, makerEmail:me.email, template:'jev', id:curId, sourceIds:srcNodes.map(x=>x.id), domains:srcNodes.map(x=>x.domain),
+      funnel:[metrics.cand,metrics.ret,metrics.synth], sections:secNodes, scripted:SCRIPTED_JEV, mapped:true, history:[], fresh:true, createdAt:now.toISOString(), mine:true };
+    if(instant){ rec.mine=false; rec.fresh=false; rec.sample=true; } KBS.unshift(rec); if(!instant) saveKB(rec);
+    selected=curId; renderKBs(); renderTest(); funnel(); renderDir();
+    if(!instant&&!me.name) setTimeout(()=>askNameAfter(rec),400);
+    if(instant) botB('This is a finished example of <b>'+esc(full(kbName))+'</b>. Click <b>New build</b> above the map, or describe another knowledge base here, to watch a build run step by step.'); else botB('Ready. <b>'+esc(full(kbName))+'</b> (<code>'+curId+'</code>) is a Sanity Knowledge Base with '+secNodes.length+' sections from '+srcNodes.length+' source'+(srcNodes.length>1?'s':'')+'. Try it in the Test column, or describe another knowledge base to start a new build.');
+  }catch(e){ if(!(e instanceof Abort)) { console.error(e); setBState('failed'); log('build.failed',String(e.message)); } }
+}
+function inspector(){}
+$('#skipBtn').addEventListener('click',()=>{ if(phase==='ready'){ newBuild(); return; } skipping=true; });
+
+/* ---------- builder chat ---------- */
+const bT=$('#bThread');
+function msgEl(role,html){ const d=document.createElement('div'); d.className='msg '+(role==='user'?'user':'bot'); d.innerHTML='<div class="who">'+(role==='user'?'YOU':'BUILDER')+'</div><div class="bubble">'+html+'</div>'; return d; }
+function botB(html){ bT.appendChild(msgEl('bot','<p>'+html+'</p>')); const sc=$('#buildScroll'); sc.scrollTop=sc.scrollHeight; }
+function userB(text){ bT.appendChild(msgEl('user',esc(text))); }
+let srcBox;
+function initBuilder(){
+  userB('I want a knowledge base that helps an agent answer questions about Jev, TypeSafe\'s new decision model.');
+  propose('Answers developer questions about what Jev is, how to call it, what it costs and where it fits.');
+}
+function propose(purpose){
+  kbPurpose=purpose;
+  document.querySelectorAll('#srcBox,#addUrl,#addBtn,#goBtn,#addErr').forEach(el=>el.removeAttribute('id'));
+  bT.appendChild(msgEl('bot','<p>Here\'s how I read that:</p><dl class="intent"><dt>name</dt><dd class="iname">'+esc(full(kbName))+'</dd><dt>purpose</dt><dd>'+esc(purpose)+'</dd><dt>budget</dt><dd>3 sources · 40k candidate · 12k synthesis tokens</dd></dl>'));
+  const m=msgEl('bot','<p>I found these three sources. Build from these?</p><div class="sources" id="srcBox"></div><div class="addrow"><input id="addUrl" placeholder="https://… add a URL" aria-label="Add a source URL"><button class="btn" type="button" id="addBtn">Add</button></div><div class="buildrow"><button class="btn primary" type="button" id="goBtn">Build</button><span class="eyebrow" id="addErr"></span></div><div class="byline"></div>');
+  bT.appendChild(m); srcBox=m.querySelector('#srcBox'); renderSources(); fillByline(m.querySelector('.byline'));
+  $('#addBtn').addEventListener('click',addUrl); $('#addUrl').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addUrl(); } });
+  $('#goBtn').addEventListener('click',()=>startBuild());
+  const sc=$('#buildScroll'); sc.scrollTop=sc.scrollHeight;
+}
+function newBuild(name){
+  runId++; phase='awaiting'; skipping=false; curId=newId(); active=SOURCES.map(s=>({...s,on:true})); extraUrls=[];
+  Object.assign(metrics,{cand:0,ret:0,drop:0,synth:0,calls:0}); initNodes(); funnel();
+  $('#kbName').readOnly=false; setBState('awaiting sources'); $('#skipBtn').disabled=true; $('#skipBtn').textContent='Skip to end';
+  if(name) setName(name);
+  propose(name?'Answers questions about '+name+'.':'Answers developer questions about Jev.');
+}
+function renderSources(){
+  srcBox.innerHTML='';
+  active.forEach(s=>{ if(!s.on) return; const d=document.createElement('div'); d.className='src'; d.innerHTML='<span class="d">'+s.domain+'</span><span class="t" title="'+esc(s.url)+'">'+esc(s.title)+'</span><button class="x" type="button" aria-label="Remove '+s.domain+'">×</button>'; d.querySelector('.x').onclick=()=>{ if(active.filter(q=>q.on).length<=1){ $('#addErr').textContent='Keep at least one source'; return; } s.on=false; renderSources(); initNodes(); }; srcBox.appendChild(d); });
+  extraUrls.forEach((u,i)=>{ const d=document.createElement('div'); d.className='src skip'; let host=u; try{host=new URL(u).hostname}catch(e){} d.innerHTML='<span class="d">'+esc(host)+'</span><span class="t">Not in the recorded run · listed, then skipped</span><button class="x" type="button" aria-label="Remove">×</button>'; d.querySelector('.x').onclick=()=>{ extraUrls.splice(i,1); renderSources(); }; srcBox.appendChild(d); });
+  const n=active.filter(s=>s.on).length; const b=$('#goBtn'); if(b) b.textContent='Build from '+n+' source'+(n>1?'s':'');
+  const full3=n+extraUrls.length>=3, ai=$('#addUrl'), ab=$('#addBtn');
+  if(ai&&!srcBox.parentElement.classList.contains('locked')){ ai.disabled=full3; ab.disabled=full3; ai.placeholder=full3?'3 of 3 sources. Remove one to add another.':'https://… add a URL ('+(n+extraUrls.length)+' of 3)'; }
+  stageLine.textContent=n+' source'+(n>1?'s':'')+' proposed · waiting for confirmation';
+}
+function addUrl(){
+  const inp=$('#addUrl'), v=inp.value.trim(), err=$('#addErr');
+  if(!/^https?:\/\/[^\s/]+\.[^\s]+/.test(v)){ err.textContent='Enter a full http(s) URL'; return; }
+  if(active.filter(s=>s.on).length+extraUrls.length>=3){ err.textContent='Up to 3 sources per build'; return; }
+  extraUrls.push(v); inp.value=''; err.textContent=''; renderSources();
+}
+function startBuild(instant){
+  if(phase!=='awaiting') return;
+  srcBox.parentElement.classList.add('locked'); const bl=srcBox.parentElement.querySelector('.byline'); if(bl){ const show=me.name&&instant!==true; bl.innerHTML=show?'<span>Built by <b></b></span>':''; if(show) bl.querySelector('b').textContent=me.name; } $('#goBtn').disabled=true; $('#addBtn').disabled=true; $('#addUrl').disabled=true;
+  const n=active.filter(s=>s.on).length;
+  if(!startBuild.quiet) botB('Building from '+n+' source'+(n>1?'s':'')+'. Jev decides chunk by chunk what the synthesis model gets to see.');
+  if(!instant) showTab('kb');
+  run(instant===true);
+}
+$('#bForm').addEventListener('submit',e=>{ e.preventDefault(); const v=$('#bInput').value.trim(); if(!v) return; userB(v); $('#bInput').value='';
+  const n=deriveName(v);
+  setTimeout(()=>{
+    if(phase==='awaiting'){ if(n){ setName(n); botB('Named it <b>'+esc(full(n))+'</b>. You can edit the name above the map. This prototype still builds from the recorded Jev sources.'); } else botB('Tell me the topic, for example “a knowledge base about MCP”.'); }
+    else if(phase==='ready'){ newBuild(n||'Untitled'); }
+    else botB('A build is running. Describe the next knowledge base when it finishes.');
+  },250); });
+$('#kbName').addEventListener('input',e=>{ const v=e.target.value.replace(/\s+knowledge base\s*$/i,''); setName(v); });
+
+/* ---------- KB list ---------- */
+function renderKBs(){
+  const list=$('#kbList'); if(!list) return; list.innerHTML='';
+  KBS.forEach(kb=>{
+    const b=document.createElement('button'); b.type='button'; b.className='kb'+(kb.key===selected?' sel':'')+(kb.fresh?' kb-new':''); kb.fresh=false;
+    b.setAttribute('aria-pressed',kb.key===selected);
+    b.innerHTML='<span class="n">'+esc(full(kb.title))+'</span><span class="id">'+kb.id+'</span><span class="m">'+kb.domains.join(' · ')+'</span>';
+    b.onclick=()=>{ selected=kb.key; renderKBs(); renderTest(); showTab('test'); };
+    list.appendChild(b);
+  });
+}
+
+/* ---------- test agent ---------- */
+const tT=$('#tThread');
+function md(t){ return t.split('\n\n').map(p=>'<p>'+esc(p).replace(/`([^`]+)`/g,'<code>$1</code>')+'</p>').join(''); }
+function kbSel(){ return KBS.find(k=>k.key===selected); }
+function secDomains(kb,sid){ const sc=kb.sections.find(s=>s.id===sid); if(!sc) return ''; if(!sc.from) return 'sanity.io/docs'; return [...new Set(sc.from.map(f=>(SOURCES.find(x=>x.id===f.slice(0,2))||{}).domain).filter(Boolean))].join(', '); }
+function citesHTML(kb,secs){ if(!secs||!secs.length) return ''; return '<details class="cites"><summary>Sources · '+secs.length+' KB entr'+(secs.length>1?'ies':'y')+'</summary><ul>'+secs.map(s=>{ const sc=kb.sections.find(q=>q.id===s); return sc?'<li><b>'+esc(sc.title)+'</b> · '+esc(secDomains(kb,s))+'</li>':''; }).join('')+'</ul></details>'; }
+function botMsgHTML(kb,text,secs){ return (secs?'<div class="retr"><span class="dot"></span>Sanity Context MCP · '+(secs.length?secs.length+' entr'+(secs.length>1?'ies':'y')+' retrieved':'no matching entries')+'</div>':'')+md(text)+citesHTML(kb,secs); }
+function renderTest(){
+  const kb=kbSel(); tT.innerHTML='';
+  secNodes.forEach(s=>s.hl=false); highlight=new Set();
+  if(!kb) return;
+  const intro=msgEl('bot','<p>Grounded only in <b>'+esc(full(kb.title))+'</b> (<code>'+kb.id+'</code>). I retrieve from it through Sanity Context MCP and say so when it doesn\'t cover something.</p>'); intro.querySelector('.who').textContent='AGENT'; tT.appendChild(intro);
+  kb.history.forEach(([r,t,s])=>{ const el=msgEl(r,r==='user'?esc(t):botMsgHTML(kb,t,s)); el.querySelector('.who').textContent=r==='user'?'YOU':'AGENT'; tT.appendChild(el); });
+  const asked=new Set(kb.history.filter(h=>h[0]==='user').map(h=>h[1]));
+  const rest=Object.keys(kb.scripted).filter(q=>!asked.has(q));
+  if(rest.length){ const d=document.createElement('div'); d.className='suggest'; rest.forEach(q=>{ const b=document.createElement('button'); b.type='button'; b.textContent=q; b.onclick=()=>ask(q); d.appendChild(b); }); tT.appendChild(d); }
+  const sc=$('#testScroll'); sc.scrollTop=sc.scrollHeight;
+}
+function retrieve(kb,q){
+  if(kb.scripted[q]) return kb.scripted[q];
+  const words=q.toLowerCase().replace(/[^a-z0-9\s-]/g,' ').split(/\s+/).filter(w=>w.length>1);
+  const scored=kb.sections.map(s=>({s,n:words.filter(w=>s.kw.includes(w)).length})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n).slice(0,2);
+  if(!scored.length) return { secs:[], a:'The '+full(kb.title)+' doesn\'t contain enough to answer that. It covers: '+kb.sections.map(s=>s.title.toLowerCase()).join(', ')+'.' };
+  return { secs:scored.map(x=>x.s.id), a:scored.map(x=>x.s.text).join('\n\n') };
+}
+let asking=false;
+async function ask(q){
+  if(asking) return; const kb=kbSel(); if(!kb) return; asking=true;
+  kb.history.push(['user',q]); renderTest();
+  const r=retrieve(kb,q);
+  setChain('mcp',chainDone());
+  if(kb.mapped){ secNodes.forEach(s=>s.hl=r.secs.includes(s.id)); highlight=new Set(); secNodes.filter(s=>s.hl).forEach(s=>s.from.forEach(f=>highlight.add(f))); }
+  const el=msgEl('bot','<div class="retr"><span class="dot"></span>Sanity Context MCP · querying '+kb.id+'…</div>'); el.querySelector('.who').textContent='AGENT';
+  tT.querySelector('.suggest')?.remove(); tT.appendChild(el); const sc=$('#testScroll'); sc.scrollTop=sc.scrollHeight;
+  await new Promise(res=>setTimeout(res,reduced?0:650));
+  setChain('agent',chainDone());
+  const bub=el.querySelector('.bubble'); const head=botMsgHTML(kb,'',r.secs).split('<p>')[0].replace(/<details[\s\S]*$/,'');
+  const toks=r.a.split(/(\s+)/); let out='';
+  for(let i=0;i<toks.length;i++){ out+=toks[i]; if(reduced) continue; if(i%3===0){ bub.innerHTML=head+md(out).replace(/<\/p>$/,'<span class="caret"></span></p>'); sc.scrollTop=sc.scrollHeight; await new Promise(res=>setTimeout(res,16)); } }
+  kb.history.push(['bot',r.a,r.secs]); asking=false; renderTest2(kb,r);
+  setTimeout(()=>chainRest(),1200);
+}
+function chainDone(){ return phase==='ready'?['web','jev','llm','kb','mcp']:['kb','mcp']; }
+function renderTest2(kb,r){ const hl=secNodes.filter(s=>s.hl).map(s=>s.id); renderTest(); if(kb.mapped){ secNodes.forEach(s=>s.hl=hl.includes(s.id)); secNodes.filter(s=>s.hl).forEach(s=>s.from.forEach(f=>highlight.add(f))); } }
+$('#tForm').addEventListener('submit',e=>{ e.preventDefault(); const v=$('#tInput').value.trim(); if(!v) return; $('#tInput').value=''; ask(v); });
+
+/* ---------- shared directory ---------- */
+let db=null, userNS=null, myId=null, rows=[], dbState='loading';
+const SAMPLE_JEV={ id:'kb_7f3c2a91', name:'Jev', description:'Answers developer questions about what Jev is, how to call it, what it costs and where it fits.', template:'jev', sourceIds:['ts','or','sw'], domains:['typesafe.ai','openrouter.ai','simonwillison.net'], createdBy:null };
+const SAMPLE_ROW={ id:'kb_41d0e8b6', name:'Context MCP', description:'Answers questions about connecting agents to Sanity Knowledge Bases through Context MCP.', template:'mcp', domains:['sanity.io'], createdBy:null, createdAt:null };
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+async function saveKB(rec){
+  if(!db) return;
+  try{ await db.collection('kbs').doc(rec.id).set({ name:rec.title, description:rec.purpose||'', makerName:rec.makerName||'', makerEmail:rec.makerEmail||'', template:'jev', sourceIds:rec.sourceIds, domains:rec.domains, createdBy:myId, createdAt:rec.createdAt, candidate:rec.funnel[0], retained:rec.funnel[1], synthesized:rec.funnel[2] }); }
+  catch(e){ botB('Built, but not added to the shared list: '+esc(e.message||e.code||'no write access')+'.'); }
+}
+function allRows(){
+  if(dbState==='live') return rows;
+  const local=KBS.filter(k=>k.mine).map(k=>({ id:k.id, name:k.title, description:k.purpose, makerName:k.makerName, makerEmail:k.makerEmail, template:k.template, sourceIds:k.sourceIds, domains:k.domains, createdBy:'me', createdAt:k.createdAt }));
+  return [...local, SAMPLE_JEV, SAMPLE_ROW];
+}
+function initials(n){ return (n||'?').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+async function renderDir(){
+  const list=allRows(); $('#navCount').textContent=list.length;
+  const body=$('#dirBody'); if(!body) return;
+  $('#dirMeta').textContent=list.length+' knowledge base'+(list.length===1?'':'s');
+  $('#dirNote').textContent=dbState==='live'?'':'The shared list isn\'t available in this view, so this shows builds from this session.';
+  if(!list.length){ body.innerHTML='<li class="empty">No knowledge bases yet. Build one in the Lab.</li>'; return; }
+  const ids=[...new Set(list.map(r=>r.createdBy).filter(x=>x&&x!=='me'&&!list.find(q=>q.createdBy===x&&q.makerName)))];
+  let ps={}; if(userNS&&ids.length){ try{ ps=await userNS.profiles(ids); }catch(e){} }
+  body.innerHTML='';
+  list.forEach(r=>{
+    const li=document.createElement('li'), b=document.createElement('button'); b.type='button'; b.className='drow';
+    b.innerHTML='<span class="n"></span><span class="d"></span><span class="by"><span class="wn"></span><small></small></span>';
+    b.querySelector('.n').textContent=full(r.name);
+    b.querySelector('.d').textContent=r.description||'';
+    let who=r.makerName||'';
+    if(!who){ if(!r.createdBy) who='Sample'; else if(r.createdBy==='me') who=me.name||'You'; else { const p=ps[r.createdBy]; who=(p&&p.name)||'Anonymous'; } }
+    b.querySelector('.wn').textContent=who;
+    b.querySelector('small').textContent=r.makerEmail||'';
+    b.title='Open '+full(r.name)+' in the Lab to test it';
+    b.onclick=()=>openKB(r);
+    li.appendChild(b); body.appendChild(li);
+  });
+}
+/* ---------- your name (optional) ---------- */
+function saveMe(){ try{ localStorage.setItem('kblab.me',JSON.stringify(me)); }catch(err){} }
+function renderMe(){ document.querySelectorAll('.byline').forEach(el=>{ if(!el.closest('.locked')) fillByline(el); }); }
+function fillByline(el){
+  el.innerHTML='';
+  if(me.name&&!el.dataset.editing){
+    el.innerHTML='<span>Built by <b></b>'+(me.email?' <span class="em"></span>':'')+'</span><button class="linkbtn" type="button">Edit</button>';
+    el.querySelector('b').textContent=me.name; if(me.email) el.querySelector('.em').textContent='· '+me.email;
+    el.querySelector('button').onclick=()=>{ el.dataset.editing='1'; fillByline(el); el.querySelector('input').focus(); };
+    return;
+  }
+  el.innerHTML='<span>Built by</span><input class="bn" maxlength="60" autocomplete="name" placeholder="Your name (optional)" aria-label="Your name, shown in the list of knowledge bases"><input class="be" type="email" maxlength="120" autocomplete="email" placeholder="Email (optional)" aria-label="Your email (optional)"'+(me.email||el.dataset.editing?'':' hidden')+'><button class="linkbtn addem" type="button"'+(me.email||el.dataset.editing?' hidden':'')+'>Add email</button>';
+  const bn=el.querySelector('.bn'), be=el.querySelector('.be'), ae=el.querySelector('.addem');
+  bn.value=me.name; be.value=me.email;
+  ae.onclick=()=>{ be.hidden=false; ae.hidden=true; be.focus(); };
+  const commit=()=>{ me={ name:bn.value.trim(), email:be.checkValidity()?be.value.trim():me.email }; saveMe(); };
+  bn.addEventListener('input',commit); be.addEventListener('input',commit);
+  const done=e=>{ if(el.contains(e.relatedTarget)) return; if(me.name){ delete el.dataset.editing; fillByline(el); } };
+  bn.addEventListener('blur',done); be.addEventListener('blur',done);
+  [bn,be].forEach(i=>i.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); i.blur(); } }));
+}
+function askNameAfter(rec){
+  const m=msgEl('bot','<p>Add your name to <b></b>? It shows in the list of knowledge bases.</p><form class="byline after"><input class="bn" maxlength="60" autocomplete="name" placeholder="Your name" aria-label="Your name"><input class="be" type="email" maxlength="120" autocomplete="email" placeholder="Email (optional)" aria-label="Your email (optional)"><button class="btn sm primary" type="submit">Add</button></form>');
+  m.querySelector('b').textContent=full(rec.title); bT.appendChild(m); const sc=$('#buildScroll'); sc.scrollTop=sc.scrollHeight;
+  m.querySelector('form').addEventListener('submit',async e=>{ e.preventDefault();
+    const bn=m.querySelector('.bn'), be=m.querySelector('.be'); if(!bn.value.trim()){ bn.focus(); return; } if(be.value&&!be.checkValidity()){ be.reportValidity(); return; }
+    me={ name:bn.value.trim(), email:be.value.trim() }; saveMe();
+    rec.makerName=me.name; rec.makerEmail=me.email;
+    if(db){ try{ await db.collection('kbs').doc(rec.id).update({ makerName:me.name, makerEmail:me.email }); }catch(err){} }
+    m.querySelector('.bubble').innerHTML='<p>Thanks, <b></b>. Your name is on <b></b> in the list.</p>';
+    const bs=m.querySelectorAll('b'); bs[0].textContent=me.name; bs[1].textContent=full(rec.title);
+    renderDir(); renderMe(); });
+}
+
+function openKB(r){
+  let kb=KBS.find(k=>k.id===r.id);
+  if(!kb){
+    if(r.template==='mcp') kb=KBS.find(k=>k.template==='mcp');
+    else { const ids=new Set((r.sourceIds||[]).length?r.sourceIds:['ts','or','sw']);
+      const secs=JEV_SECTIONS.map(s=>({...s,from:s.from.filter(f=>ids.has(f.slice(0,2)))})).filter(s=>s.from.length);
+      kb={ key:r.id, id:r.id, title:r.name, template:'jev', domains:r.domains||[], sourceIds:[...ids], sections:secs, scripted:SCRIPTED_JEV, mapped:false, history:[], createdAt:r.createdAt };
+      KBS.push(kb); }
+  }
+  selected=kb.key; renderKBs(); renderTest(); go('lab'); showTab('test');
+}
+function go(view){
+  const all=view==='all'; $('.app').classList.toggle('all',all); $('#p-all').hidden=!all;
+  $('#navAllLabel').textContent=all?'Back to Lab':'All knowledge bases'; $('#navCount').hidden=all;
+  $('#navAll').setAttribute('href',all?'#lab':'#all');
+  if(all) renderDir(); else requestAnimationFrame(resize);
+}
+$('#navLab').addEventListener('click',e=>{ e.preventDefault(); go('lab'); });
+$('#navAll').addEventListener('click',e=>{ e.preventDefault(); go($('.app').classList.contains('all')?'lab':'all'); });
+(async()=>{
+  const c=window.claude; if(!c||!c.use){ dbState='local'; renderDir(); return; }
+  const [d,u]=await Promise.all([c.use('db').catch(()=>null), c.use('user').catch(()=>null)]);
+  userNS=u; if(u){ try{ myId=await u.id(); }catch(e){} }
+  if(!d){ dbState='local'; renderDir(); return; }
+  db=d;
+  db.collection('kbs').orderBy('createdAt','desc').limit(200).onSnapshot(snap=>{
+    rows=snap.docs.map(x=>({ id:x.id, ...x.data() })); dbState='live'; renderDir();
+  },()=>{ dbState='local'; renderDir(); });
+})();
+
+/* ---------- narrow layout ---------- */
+function showTab(t){ if(matchMedia('(max-width:720px)').matches) $('#p-'+t).scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'}); }
+
+/* ---------- boot ---------- */
+readColors();
+new MutationObserver(readColors).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readColors);
+initNodes(); new ResizeObserver(resize).observe(cv); resize();
+renderMe(); initBuilder(); setName(kbName); startBuild.quiet=true; startBuild(true); startBuild.quiet=false; renderKBs(); renderTest(); funnel(); renderDir(); if(location.hash==='#all') go('all'); document.fonts&&document.fonts.ready.then(()=>fitName($('#kbName')));
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
