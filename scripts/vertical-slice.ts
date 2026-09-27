@@ -9,7 +9,7 @@
  */
 import {fetchPage} from '../lib/ingestion/fetch.ts'
 import {extractReadableText} from '../lib/ingestion/extract.ts'
-import {chunkText, estimateTokens} from '../lib/ingestion/chunk.ts'
+import {chunkText, estimateTokens, type Chunk} from '../lib/ingestion/chunk.ts'
 import {jevRelevanceGate} from '../lib/providers/jev/index.ts'
 import {synthesize} from '../lib/ingestion/synthesize.ts'
 import {sanityKnowledgeBaseProvider as kbProvider} from '../lib/providers/sanity/knowledge-base.ts'
@@ -17,9 +17,10 @@ import {sanityKnowledgeBaseProvider as kbProvider} from '../lib/providers/sanity
 const args = process.argv.slice(2)
 const keep = args.includes('--keep')
 const positional = args.filter((a) => !a.startsWith('--'))
-const url = positional[0] ?? 'https://www.sanity.io/docs/ai/sanity-context-mcp'
+const purposeFlag = args.find((a) => a.startsWith('--purpose='))?.slice('--purpose='.length)
+const urls = positional.length > 0 ? positional : ['https://www.sanity.io/docs/ai/sanity-context-mcp']
 const purpose =
-  positional[1] ??
+  purposeFlag ??
   'Help an agent answer questions about Sanity Context MCP: how to connect to it, what tools it exposes, and how authentication works.'
 
 const step = (n: number, label: string) => console.log(`\n[${n}] ${label}`)
@@ -27,17 +28,28 @@ const usd = (n: number | undefined) => (n === undefined ? 'n/a' : `$${n.toFixed(
 
 async function main() {
   const started = Date.now()
-  console.log(`Knowledge Base Lab — vertical slice\nSource: ${url}`)
+  console.log(`Knowledge Base Lab — vertical slice`)
+  console.log(`Purpose: ${purpose}`)
 
-  step(1, 'Fetch')
-  const page = await fetchPage(url)
-  console.log(`    "${page.title}" — ${page.bytes.toLocaleString()} bytes`)
-
-  step(2, 'Extract and chunk')
-  const text = extractReadableText(page.html)
-  const chunks = chunkText(text, page.url, 0)
+  step(1, `Fetch ${urls.length} source${urls.length === 1 ? '' : 's'}`)
+  const sources: {url: string; title: string}[] = []
+  const chunks: Chunk[] = []
+  for (const [index, raw] of urls.entries()) {
+    const page = await fetchPage(raw)
+    const extraction = extractReadableText(page.html, page.url)
+    const pageChunks = chunkText(extraction.text, page.url, index)
+    chunks.push(...pageChunks)
+    sources.push({url: page.url, title: page.title})
+    console.log(
+      `    ${new URL(page.url).hostname.padEnd(24)} ${extraction.method.padEnd(11)} ` +
+        `${pageChunks.length} chunks · ~${pageChunks.reduce((s, c) => s + c.tokens, 0).toLocaleString()} tokens`,
+    )
+  }
   const candidateTokens = chunks.reduce((sum, c) => sum + c.tokens, 0)
-  console.log(`    ${chunks.length} chunks, ~${candidateTokens.toLocaleString()} candidate tokens`)
+  const page = {title: sources[0]?.title ?? 'Knowledge base', url: sources[0]?.url ?? urls[0]!}
+  console.log(`    total: ${chunks.length} chunks, ~${candidateTokens.toLocaleString()} candidate tokens`)
+
+  step(2, 'Skipped (merged into fetch)')
 
   step(3, 'Jev relevance gate')
   const gate = await jevRelevanceGate.evaluate({
@@ -55,11 +67,11 @@ async function main() {
     `    ${gate.latencyMs}ms · kept ${kept.length} · dropped ${dropped} · ` +
       `${usd(gate.usage.costUsd)} · ${gate.usage.inputTokens} input tokens`,
   )
-  for (const c of chunks.slice(0, 8)) {
+  for (const c of chunks) {
     const d = gate.decisions[c.id]!
-    console.log(`      ${d.score.toFixed(2)} ${d.decision.toUpperCase().padEnd(9)} ${c.label}`)
+    const host = new URL(c.sourceUrl).hostname.replace(/^www\./, '')
+    console.log(`      ${d.score.toFixed(2)} ${d.decision.toUpperCase().padEnd(9)} ${host.padEnd(22)} ${c.label}`)
   }
-  if (chunks.length > 8) console.log(`      … ${chunks.length - 8} more`)
 
   const reduction = candidateTokens > 0 ? 1 - retainedTokens / candidateTokens : 0
   console.log(`    Jev kept ${retainedTokens.toLocaleString()} of ${candidateTokens.toLocaleString()} tokens (${(reduction * 100).toFixed(0)}% not sent to synthesis)`)
@@ -71,7 +83,7 @@ async function main() {
     title: page.title,
     purpose,
     retained: kept,
-    sources: [{url: page.url, title: page.title}],
+    sources,
   })
   console.log(`    ${estimateTokens(markdown).toLocaleString()} tokens of Markdown · ${usd(usage.costUsd)}`)
   console.log(`    ${markdown.split('\n').filter((l) => l.startsWith('## ')).length} sections`)

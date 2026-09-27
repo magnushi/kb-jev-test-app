@@ -250,7 +250,31 @@ https://api.sanity.io/v1/context/organizations/:organizationId/mcp/:mcpEndpointN
 organization token with Context Viewer permission — a project token returns 403.
 Read-only; it does not run the agent loop, which is why the Mastra harness exists.
 
-**Not yet verified live** — pending a built knowledge base to query. First task in Phase 1.
+### Endpoint setup (one-time, manual)
+
+MCP endpoints are created in the **Context app in the Dashboard only** — there is no
+management surface for them in `@sanity/client`. Fields: `title`, `name` (immutable,
+lowercase/numbers/hyphens), `sources` (1–100), optional `instructions` and `groqFilter`.
+
+**We need exactly one endpoint.** Mode and knowledge bases can both be overridden per
+request, so a single endpoint serves every knowledge base the app builds:
+
+```
+https://api.sanity.io/v1/context/organizations/oVGkeJzXR/mcp/<name>
+  ?mode=knowledge_base&knowledgeBases=<kbId>
+```
+
+Caveats that matter for us:
+- An endpoint whose sources are all knowledge bases serves KB mode automatically. If it
+  has **any** dataset source, the dataset wins and KB sources are ignored.
+- A KB-mode endpoint with no readable knowledge bases is refused with JSON-RPC `-32005`.
+  Keep one permanent seed knowledge base configured as its source so the 50-item
+  retention policy can never empty it.
+- Auth: organization token with Context Viewer (`sanity.knowledge-base.read`). Editor
+  also works — our existing token qualifies. A project token is rejected with
+  `403 contextGrantRequired`.
+
+**Not yet verified live** — blocked on creating the endpoint.
 
 ---
 
@@ -279,7 +303,12 @@ events back as documents.
 
 1. `sanity.knowledge-base.create` grant for robot tokens — with the Context team.
 2. Context MCP retrieval — verify against a real built knowledge base (Phase 1).
-3. Jev thresholds — calibrate against real pages (Phase 3).
+3. Jev thresholds — partially validated. A three-source build (MCP docs + Wikipedia MCP
+   + Wikipedia Norwegian language as a deliberate off-topic control) gave:
+   `19,718 candidate -> 4,885 kept -> 4,294 synthesized`, **75% withheld from synthesis**.
+   Off-topic chunks scored 0.02–0.05; on-topic 0.80–0.97; Wikipedia citation lists
+   landed at 0.30, correctly in the uncertain band. Jev cost $0.00113 of a $0.20 build
+   — 0.6%. Still to calibrate: the 0.8/0.2 thresholds themselves.
 4. Whether the robot token can do `imports.create` / `build()` / `delete`, or only reads.
    The adapter falls back on 403 per operation, so this is an optimisation, not a blocker.
 5. Rotate the Jev and Anthropic keys before public launch; both were pasted into a

@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
-    "@sanity/client": "^8.7.0"
+    "@mozilla/readability": "^0.6.0",
+    "@sanity/client": "^8.7.0",
+    "linkedom": "^0.18.13"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
