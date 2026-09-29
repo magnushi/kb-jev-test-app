@@ -52,6 +52,10 @@ export const config = {
     /** Jev allows 32k for state + longest question; stay well inside it. */
     maxChunksPerJevCall: 20,
   },
+  retention: {
+    /** DECISIONS.md: the list is capped at 50; older ones are deleted. */
+    maxKnowledgeBases: Number(process.env.MAX_KNOWLEDGE_BASES ?? 50),
+  },
   relevance: {
     keepAbove: 0.8,
     dropBelow: 0.2,
