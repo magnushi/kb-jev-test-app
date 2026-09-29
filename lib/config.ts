@@ -40,6 +40,8 @@ export const config = {
     /** Interim: robot tokens cannot create knowledge bases. See docs/integration-notes.md §3. */
     userToken: process.env.SANITY_USER_TOKEN,
     contextApiVersion: process.env.SANITY_CONTEXT_API_VERSION ?? '2026-08-25',
+    /** Name of the MCP endpoint created in the Context app. Dashboard-only. */
+    mcpEndpoint: process.env.SANITY_MCP_ENDPOINT,
   },
   budgets: {
     maxSources: 3,
@@ -51,6 +53,12 @@ export const config = {
     fetchTimeoutMs: 15_000,
     /** Jev allows 32k for state + longest question; stay well inside it. */
     maxChunksPerJevCall: 20,
+  },
+  limits: {
+    /** DECISIONS.md: >10 builds started in any 5-minute window shows the heavy-load message. */
+    burstMaxBuilds: Number(process.env.BURST_MAX_BUILDS ?? 10),
+    burstWindowMs: 5 * 60 * 1000,
+    maxConcurrentPerSession: 1,
   },
   retention: {
     /** DECISIONS.md: the list is capped at 50; older ones are deleted. */
