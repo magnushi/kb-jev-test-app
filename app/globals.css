@@ -193,3 +193,14 @@ details.sources summary { color: var(--muted); cursor: pointer; }
 }
 
 .banner { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; font-size: var(--text-sm); margin-bottom: 12px; }
+
+.pending { display: inline-flex; align-items: baseline; gap: 2px; }
+.ellipsis { display: inline-flex; gap: 3px; margin-left: 3px; }
+.ellipsis i {
+  width: 3px; height: 3px; border-radius: 50%; background: var(--muted);
+  display: block; animation: bounce 1.2s ease-in-out infinite;
+}
+.ellipsis i:nth-child(2) { animation-delay: .15s; }
+.ellipsis i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ellipsis i { animation: none; opacity: .6; } }

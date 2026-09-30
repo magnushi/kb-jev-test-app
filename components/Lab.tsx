@@ -31,6 +31,7 @@ export function Lab({initialCount}: {initialCount: number}) {
   const [turns, setTurns] = useState<Turn[]>([])
   const [asking, setAsking] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [pending, setPending] = useState<string | null>(null)
   const proposalId = useRef(0)
   const lastSeq = useRef(-1)
 
@@ -109,6 +110,7 @@ export function Lab({initialCount}: {initialCount: number}) {
       setBusy(true)
       setNotice(null)
       setThread((t) => [...t, {kind: 'user', text: message}])
+      setPending('Reading that and finding sources')
       try {
         const res = await fetch('/api/build', {
           method: 'POST',
@@ -136,6 +138,7 @@ export function Lab({initialCount}: {initialCount: number}) {
           {kind: 'status', text: error instanceof Error ? error.message : 'Something went wrong.'},
         ])
       } finally {
+        setPending(null)
         setBusy(false)
       }
     },
@@ -242,6 +245,7 @@ export function Lab({initialCount}: {initialCount: number}) {
           phase={map.phase}
           maker={maker}
           setMaker={setMaker}
+          pending={pending ?? undefined}
         />
 
         <section className="panel" aria-label="Knowledge map">

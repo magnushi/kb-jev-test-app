@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 
 export type ProposedSource = {url: string; title?: string}
 export type Intent = {title: string; purpose: string; topic: string}
@@ -23,6 +23,7 @@ export function BuilderColumn({
   phase,
   maker,
   setMaker,
+  pending,
 }: {
   thread: Thread[]
   sources: ProposedSource[]
@@ -33,9 +34,12 @@ export function BuilderColumn({
   phase: string
   maker: {name: string; email: string}
   setMaker: (next: {name: string; email: string}) => void
+  /** Shown while the builder is interpreting a request, which can take a minute. */
+  pending?: string
 }) {
   const [draft, setDraft] = useState('')
   const [urlDraft, setUrlDraft] = useState('')
+  const bodyRef = useRef<HTMLDivElement>(null)
   const [showEmail, setShowEmail] = useState(false)
   const [editingMaker, setEditingMaker] = useState(false)
 
@@ -44,13 +48,20 @@ export function BuilderColumn({
   const hasProposal = thread.some((m) => m.kind === 'proposal' && !m.locked)
   const savedMaker = maker.name.trim().length > 0 && !editingMaker
 
+  // Keep the newest message in view. Without this, appended messages land below
+  // the fold and the opening prompt stays on screen, which reads as a repeat ask.
+  useEffect(() => {
+    const body = bodyRef.current
+    if (body) body.scrollTop = body.scrollHeight
+  }, [thread, pending])
+
   return (
     <section className="panel" aria-label="Build">
       <div className="panel-header">
         <span className="panel-title">Build</span>
       </div>
 
-      <div className="panel-body chat-body">
+      <div className="panel-body chat-body" ref={bodyRef}>
         {thread.map((message, index) => {
           if (message.kind === 'user') {
             return (
@@ -192,6 +203,17 @@ export function BuilderColumn({
             </div>
           )
         })}
+        {pending && (
+          <div className="msg">
+            <div className="msg-label">BUILDER</div>
+            <div className="muted pending">
+              {pending}
+              <span className="ellipsis" aria-hidden>
+                <i /><i /><i />
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="composer">

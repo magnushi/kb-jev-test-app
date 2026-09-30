@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 
 export type Turn = {
   role: 'user' | 'agent'
@@ -28,6 +28,12 @@ export function TestColumn({
   busy: boolean
 }) {
   const [draft, setDraft] = useState('')
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const body = bodyRef.current
+    if (body) body.scrollTop = body.scrollHeight
+  }, [turns])
 
   return (
     <section className="panel" aria-label="Test the knowledge base">
@@ -35,7 +41,7 @@ export function TestColumn({
         <span className="panel-title">Test the knowledge base</span>
       </div>
 
-      <div className="panel-body chat-body">
+      <div className="panel-body chat-body" ref={bodyRef}>
         <div className="msg">
           <div className="msg-label">AGENT</div>
           {ready ? (
