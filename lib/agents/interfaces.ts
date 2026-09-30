@@ -17,8 +17,23 @@ export interface RelevanceGate {
   }): Promise<{decisions: Record<string, RelevanceDecision>; usage: Usage; latencyMs: number}>
 }
 
+export type Candidate = {url: string; title?: string; pageAge?: string}
+
 export interface SearchProvider {
-  discover(input: {topic: string; maxResults: number}): Promise<{url: string; title?: string}[]>
+  discover(input: {topic: string; maxResults: number}): Promise<Candidate[]>
+}
+
+export interface CandidateRanker {
+  /**
+   * Spec §4 Stage B step 5: choose ~3 from a wider candidate set. Judged on URL
+   * and title only — web search returns no snippet — which is exactly the kind of
+   * fast, cheap triage Jev exists for.
+   */
+  rank(input: {
+    purpose: string
+    topic: string
+    candidates: Candidate[]
+  }): Promise<{ranked: (Candidate & {score: number})[]; usage: Usage; latencyMs: number}>
 }
 
 export interface KnowledgeBaseProvider {

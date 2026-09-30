@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import {config} from '../../config.ts'
-import type {SearchProvider} from '../../agents/interfaces.ts'
+import type {Candidate, SearchProvider} from '../../agents/interfaces.ts'
 
 const client = new Anthropic({apiKey: config.llm.apiKey})
 
@@ -28,7 +28,7 @@ export const anthropicSearchProvider: SearchProvider = {
       ],
     })
 
-    const found = new Map<string, {url: string; title?: string}>()
+    const found = new Map<string, Candidate>()
     outer: for (const block of message.content) {
       if (block.type !== 'web_search_tool_result') continue
       // Server-tool errors arrive as HTTP 200 with an object, not a list.
@@ -42,7 +42,11 @@ export const anthropicSearchProvider: SearchProvider = {
         if (!host) continue
         // One page per domain, so three sources mean three perspectives.
         if ([...found.values()].some((f) => safeHost(f.url) === host)) continue
-        found.set(result.url, {url: result.url, title: result.title})
+        found.set(result.url, {
+          url: result.url,
+          title: result.title,
+          pageAge: result.page_age ?? undefined,
+        })
         if (found.size >= maxResults) break outer
       }
     }

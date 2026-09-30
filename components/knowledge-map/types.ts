@@ -180,8 +180,19 @@ export function statusLine(state: MapState): string {
       return state.buildStage
         ? `Sanity is building · ${state.buildStage}`
         : 'Sanity is building the knowledge base'
-    case 'ready':
-      return `${state.sections.length} sections · hover the map to inspect decisions`
+    case 'ready': {
+      // Low reduction is a real outcome, not a failure: it means every source
+      // was on topic. Say which happened rather than showing a flat funnel.
+      const dropped = chunks.filter((c) => c.state === 'drop').length
+      const withheld =
+        state.candidateTokens > 0
+          ? Math.round((1 - state.retainedTokens / state.candidateTokens) * 100)
+          : 0
+      if (dropped === 0) {
+        return `${state.sections.length} sections · Jev kept all ${chunks.length} chunks: every source was on topic`
+      }
+      return `${state.sections.length} sections · Jev withheld ${withheld}% of source material from the synthesis model`
+    }
     case 'failed':
       return state.error ?? 'Build failed'
   }

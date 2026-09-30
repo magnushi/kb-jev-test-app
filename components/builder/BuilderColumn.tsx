@@ -8,7 +8,13 @@ export type Intent = {title: string; purpose: string; topic: string}
 export type Thread =
   | {kind: 'user'; text: string}
   | {kind: 'intent'; intent: Intent; budget: string}
-  | {kind: 'proposal'; id: number; sources: ProposedSource[]; locked: boolean}
+  | {
+      kind: 'proposal'
+      id: number
+      sources: ProposedSource[]
+      locked: boolean
+      selection?: {considered: number; chosen: number; latencyMs: number; costUsd?: number}
+    }
   | {kind: 'status'; text: string}
 
 const MAX_SOURCES = 3
@@ -122,6 +128,12 @@ export function BuilderColumn({
                 I found these {shown.length === 1 ? 'sources' : `${numberWord(shown.length)} sources`}. Build from
                 these?
               </div>
+              {message.selection && message.selection.considered > message.selection.chosen && (
+                <div className="muted small" style={{marginBottom: 8}}>
+                  Jev reviewed {message.selection.considered} candidates and picked{' '}
+                  {message.selection.chosen} in {message.selection.latencyMs}ms.
+                </div>
+              )}
 
               {shown.map((source) => (
                 <div className="source-card" key={source.url}>

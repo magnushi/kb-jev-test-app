@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Phase Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f6f6f8; --surface:#ffffff; --surface-2:#eeeef1; --ink:#252837; --ink-2:#515870; --muted:#727892;
+  --line:#e3e4e8; --line-2:#bbbdc9; --accent:#556bfc; --accent-soft:#e5edff; --accent-ink:#ffffff; --drop:#bbbdc9;
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --r:6px; --r-sm:3px; --shadow:0 0 0 1px rgba(37,40,55,.04),0 6px 20px -8px rgba(37,40,55,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ color-scheme:dark;
+    --bg:#13141b; --surface:#1b1d27; --surface-2:#252837; --ink:#e4e5e9; --ink-2:#bbbdc9; --muted:#9499ad;
+    --line:#2a2d3f; --line-2:#383d51; --accent:#7595ff; --accent-soft:#192457; --accent-ink:#101228; --drop:#515870;
+    --shadow:0 0 0 1px rgba(0,0,0,.2),0 6px 20px -8px rgba(0,0,0,.6); }
+}
+:root[data-theme="dark"]{ color-scheme:dark;
+  --bg:#13141b; --surface:#1b1d27; --surface-2:#252837; --ink:#e4e5e9; --ink-2:#bbbdc9; --muted:#9499ad;
+  --line:#2a2d3f; --line-2:#383d51; --accent:#7595ff; --accent-soft:#192457; --accent-ink:#101228; --drop:#515870;
+  --shadow:0 0 0 1px rgba(0,0,0,.2),0 6px 20px -8px rgba(0,0,0,.6); }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.46;-webkit-font-smoothing:antialiased;margin:0}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code,.mono{font-family:var(--mono);font-size:12px}
+
+.page{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:16px}
+.top h1{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.top p{margin:0;color:var(--ink-2);max-width:70ch}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden}
+.seg button{border:0;background:none;padding:5px 10px;font-size:12.5px;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ctl-label{font-size:12px;color:var(--muted);margin-right:6px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:6px 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--bg);border-color:var(--line-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:4px 8px;font-size:12px}
+
+.viewer{display:grid;grid-template-columns:230px minmax(0,auto) minmax(260px,1fr);gap:20px;align-items:start}
+.states{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.states li button{display:grid;grid-template-columns:22px 1fr;gap:6px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:7px 6px;font-size:12.5px;color:var(--ink-2)}
+.states li button:hover{background:var(--surface)}
+.states li button .n{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:1px}
+.states li button[aria-current="true"]{background:var(--surface);color:var(--ink);font-weight:600}
+.states li button[aria-current="true"] .n{color:var(--accent)}
+.states .grp{font-size:11px;font-weight:600;color:var(--muted);padding:12px 6px 4px;border-bottom:1px solid var(--line)}
+
+.notes h2{margin:0 0 4px;font-size:15px;font-weight:600}
+.notes .sub{color:var(--ink-2);margin:0 0 14px}
+.notes dl{margin:0;display:grid;gap:12px}
+.notes dt{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.notes dd{margin:0;color:var(--ink-2)}
+.notes dd b{color:var(--ink);font-weight:600}
+.notes .flag{margin-top:14px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:var(--r);color:var(--ink-2);font-size:12.5px}
+.notes .flag b{color:var(--ink)}
+
+/* ---------- replica of the middle column ---------- */
+.frame{width:490px;max-width:100%;transition:width .3s ease}
+.col{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);display:flex;flex-direction:column}
+.phead{display:flex;align-items:center;gap:10px;padding:0 16px;height:48px;border-bottom:1px solid var(--line)}
+.phead h3{margin:0;font-size:14px;font-weight:600}
+.phead .btn{margin-left:auto}
+.cbody{padding:16px}
+.namerow{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.namerow .nm{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.namerow .st{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.namerow .st.live{color:var(--accent)}
+.stage{position:relative;height:360px;background:var(--bg);border-radius:var(--r);overflow:hidden}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;transition:opacity .45s ease}
+.stage.outlined canvas{opacity:0;pointer-events:none}
+
+/* stage strip */
+.below{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.strip{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--line-2);font-variant-numeric:tabular-nums}
+.strip span{position:relative;white-space:nowrap}
+.strip .done{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.strip .on{color:var(--ink);font-weight:600}
+.strip .on::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:2px;background:var(--accent);border-radius:1px}
+.strip .on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:5px;vertical-align:1px;animation:pulse 1.4s ease-in-out infinite}
+.strip .fail{color:var(--ink);font-weight:600;text-decoration:none}
+.strip .fail::after{content:" · stopped";font-weight:400;color:var(--ink-2)}
+@keyframes pulse{50%{opacity:.25}}
+.statusline{font-size:12px;color:var(--ink-2)}
+.frameline{font-size:12px;color:var(--muted)}
+.frameline b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+.failrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.lg{width:10px;height:10px;border-radius:2px;display:inline-block}
+.lg.k{background:var(--accent)} .lg.u{background:var(--accent-soft);box-shadow:inset 0 0 0 1.2px var(--accent)} .lg.d{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.lg.c{background:var(--accent)} .lg.p{background:none;box-shadow:inset 0 0 0 1.2px var(--line-2)}
+.tokens{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;color:var(--muted);font-size:12px;margin-top:12px}
+.tokens b{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--ink)}
+.tokens .ar{color:var(--line-2)} .tokens .u{margin-left:auto}
+.track{position:relative;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:8px}
+.track i{position:absolute;left:0;top:0;bottom:0}
+.track .r{width:61%;background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.track .s{width:18%;background:var(--accent)}
+
+/* outline */
+.outline{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease}
+.stage.outlined .outline{opacity:1;pointer-events:auto}
+.ohead{display:flex;align-items:center;gap:8px;padding:10px 12px 0}
+.ohead .t{font-size:11px;font-weight:600;color:var(--muted)}
+.ohead .t b{color:var(--ink);font-weight:600}
+.ohead .seg{margin-left:auto}
+.ohead .seg button{padding:3px 8px;font-size:11.5px}
+.purpose{padding:4px 12px 8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);margin:0 0 0}
+.purpose q{color:var(--ink-2);quotes:"“" "”"}
+.readfor{margin:8px 12px 0;padding:6px 8px;border-radius:var(--r-sm);background:var(--accent-soft);font-size:12px;color:var(--ink)}
+.oscroll{position:relative;flex:1;overflow:auto;padding:4px 12px 12px 12px;scrollbar-width:thin}
+.arcs{position:absolute;left:0;top:0;width:24px;pointer-events:none;overflow:visible}
+.ogroup{margin-top:8px}
+.ogroup>.gh{font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 0 2px 16px}
+.osub{padding-left:12px}
+.osub>.gh{font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 0 2px 16px}
+.entry{position:relative;display:grid;grid-template-columns:16px 1fr auto;gap:0 6px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:4px 6px 4px 0;border-radius:var(--r-sm)}
+.entry:hover,.entry.hov{background:var(--surface)}
+.entry .mk{width:8px;height:8px;border-radius:2px;margin-left:4px;align-self:center}
+.entry.core .mk{background:var(--accent)}
+.entry.peri .mk{box-shadow:inset 0 0 0 1.2px var(--line-2)}
+.entry .en{font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry.core .en{font-weight:600;color:var(--ink)}
+.entry.peri .en{font-weight:500;color:var(--ink-2);font-size:12.5px}
+.entry .rel{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.entry .sm{grid-column:2/4;font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry.peri .sm{display:none}
+.entry.peri.hov .sm,.entry.peri:hover .sm,.entry.peri:focus-visible .sm{display:block}
+.entry .tp{grid-column:2/4;font-size:11.5px;color:var(--muted);display:none}
+.entry.hov .tp{display:block}
+.entry.read{background:var(--accent-soft)}
+.entry.read .en{color:var(--ink)}
+.entry.read .rel::before{content:"read · ";color:var(--accent);font-family:var(--sans);font-weight:600}
+.entry.relhi .mk{box-shadow:0 0 0 2px var(--accent-soft),inset 0 0 0 1.2px var(--accent)}
+.more{border:0;background:none;color:var(--muted);font-size:12px;padding:3px 0 3px 22px}
+.more:hover{color:var(--ink)}
+.stage.revealing .entry,.stage.revealing .gh,.stage.revealing .more{animation:arrive .42s cubic-bezier(.2,.7,.2,1) both}
+.stage.revealing .purpose{animation:arrive .42s ease both}
+@keyframes arrive{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.issue{margin:6px 12px 0;font-size:12px;color:var(--ink-2)}
+.issue b{color:var(--ink)}
+
+.decisions{margin-top:36px;border-top:1px solid var(--line);padding-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px 28px}
+.decisions h2{grid-column:1/-1;margin:0;font-size:15px;font-weight:600}
+.decisions h3{margin:0 0 4px;font-size:13px;font-weight:600}
+.decisions p{margin:0;color:var(--ink-2)}
+.foot{margin-top:28px;font-size:12px;color:var(--muted)}
+
+@media (max-width:1100px){ .viewer{grid-template-columns:200px minmax(0,1fr)} .notes{grid-column:1/-1} }
+@media (max-width:760px){ .viewer{grid-template-columns:1fr} .states{display:flex;overflow-x:auto;border:0;gap:4px} .states .grp{display:none} .states li button{border:1px solid var(--line);border-radius:var(--r-sm);white-space:nowrap;grid-template-columns:auto auto} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.rm *{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="top">
+    <h1>Build phase mockups</h1>
+    <p>The middle column of Knowledge Base Lab from the end of synthesis to the finished outline. Pick a state, or press Play to run the sequence. All content is sample data.</p>
+  </div>
+
+  <div class="ctrls">
+    <button class="btn primary" id="play" type="button">Play sequence</button>
+    <span><span class="ctl-label">Width</span><span class="seg" id="wSeg"><button type="button" data-w="490" aria-pressed="true">Desktop</button><button type="button" data-w="400" aria-pressed="false">900px</button><button type="button" data-w="368" aria-pressed="false">Phone</button></span></span>
+    <span><span class="ctl-label">Outline size</span><span class="seg" id="nSeg"><button type="button" data-n="10" aria-pressed="true">10 entries</button><button type="button" data-n="40" aria-pressed="false">40 entries</button></span></span>
+    <span><span class="ctl-label">Motion</span><span class="seg" id="mSeg"><button type="button" data-m="full" aria-pressed="true">Full</button><button type="button" data-m="reduced" aria-pressed="false">Reduced</button></span></span>
+  </div>
+
+  <div class="viewer">
+    <ul class="states" id="states" aria-label="States"></ul>
+
+    <div class="frame" id="frame">
+      <section class="col" aria-label="Knowledge map">
+        <div class="phead"><h3>Knowledge map</h3><button class="btn sm" id="colBtn" type="button">Skip to end</button></div>
+        <div class="cbody">
+          <div class="namerow"><span class="nm">Jev Knowledge Base</span><span class="st" id="st">building</span></div>
+          <div class="stage" id="stage">
+            <canvas id="cv" aria-label="Build visualization"></canvas>
+            <div class="outline" id="outline" aria-label="Knowledge base outline">
+              <div class="ohead"><span class="t" id="oCount"></span>
+                <span class="seg" id="viewSeg"><button type="button" data-v="outline" aria-pressed="true">Outline</button><button type="button" data-v="built" aria-pressed="false">How it was built</button></span></div>
+              <p class="purpose">Core means central to your purpose: <q>Answers developer questions about what Jev is, how to call it, what it costs and where it fits.</q></p>
+              <div class="readfor" id="readFor" hidden></div>
+              <div class="issue" id="issue" hidden></div>
+              <div class="oscroll" id="oscroll"><svg class="arcs" id="arcs" aria-hidden="true"></svg><div id="tree"></div></div>
+            </div>
+          </div>
+          <div class="below" id="below"></div>
+          <div class="tokens"><span><b>33k</b> source</span><span class="ar">→</span><span><b>20.1k</b> kept by Jev</span><span class="ar">→</span><span><b id="synTok">6k</b> synthesized</span><span class="u">tokens</span></div>
+          <div class="track" aria-hidden="true"><i class="r"></i><i class="s"></i></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="notes" id="notes" aria-live="polite"></aside>
+  </div>
+
+  <section class="decisions">
+    <h2>How this answers the brief</h2>
+    <div><h3>The wait gets a horizon</h3><p>All nine Sanity stages sit in one line under the map, with <code>queued</code> in front. Done stages are struck through, the current one is underlined. No percentages and no estimates; an elapsed clock is the only time shown, because it's the only time that's true.</p></div>
+    <div><h3>The knowledge core finally exists</h3><p>During synthesis the kept chunks cross the Jev line and pack into a core. Each Sanity stage then gets its own motion on that core: reading, grouping, planning, restructuring, writing, checking. A caption says the motion is ours and the stage is Sanity's.</p></div>
+    <div><h3>The wait is framed, not hidden</h3><p>One line under the stages: Jev's measured time, the synthesis time, and that Sanity's indexing is the slow part. It repeats the Jev story at the moment people have nothing else to read.</p></div>
+    <div><h3>The reveal is the real outline</h3><p>When the build lands, the core fades and lane 3 is replaced by Sanity's outline, rows arriving top to bottom. It's a tree grouped by path, core entries first and heavy, peripheral ones lighter with summaries on hover. <code>related:</code> links draw once on arrival, then only on hover and during answers.</p></div>
+    <div><h3>Core reads as centrality</h3><p>No badge. Core entries lead each group, carry weight and a filled marker, and show their summary. A line above the tree quotes the purpose from the left column, so the cause of "core" is visible on the page.</p></div>
+    <div><h3>4 or 40 entries, same 360px</h3><p>The outline scrolls inside the map area. Core entries always show; when a group has more than three peripheral entries they fold into "+ N peripheral". The build map stays one click away under "How it was built".</p></div>
+    <div><h3>Answers light up exact entries</h3><p>The agent reads entries by path, so the rows it read get the accent tint and a "read" label, and links between them draw. The question it answered sits above the tree.</p></div>
+    <div><h3>Jev and Sanity stay separate</h3><p>Jev's lane stops at the divider. Everything after it is labeled Sanity's work, and the ready state says who built the index.</p></div>
+  </section>
+
+  <p class="foot">Sample data throughout. Stage meanings in the captions are our reading of Sanity's stage names and need confirming with the Sanity Context team.</p>
+</div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+let reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- sample data ---------- */
+const SOURCES = [
+  { id:'ts', domain:'typesafe.ai', chunks:[['What a System One model is',.97],['Kahneman framing',.62],['Type-safe outputs',.95],['Calibrated probabilities',.93],['Latency 70–500 ms',.91],['Pricing',.96],['Use cases',.88],['Limits',.94],['Early-access signup',.08],['Site navigation',.02],['Benchmark captions',.31]] },
+  { id:'or', domain:'openrouter.ai', chunks:[['Model ID',.95],['Decisions vs. System One API',.93],['Question primitives',.98],['usage.cost',.89],['32k context',.90],['Auth',.84],['Docs sidebar',.03],['Generic quickstart',.22],['Guides index',.05],['Credits and rate limits',.55]] },
+  { id:'sw', domain:'simonwillison.net', chunks:[['Typed decisions out',.92],['Price vs. GPT-5 Nano',.81],['Parallel questions',.86],['Good fits',.90],['Caveats',.87],['Weak on numbers',.85],['City experiment',.58],['Sidebar',.04],['Comments',.06],['Recaps',.18]] }
+];
+const SECTIONS=[['ts0','ts1','ts2','sw0'],['or2','ts3'],['or0','or1','or3','or4','or5'],['ts4','ts5','sw1','sw2'],['ts6','sw3','or9'],['ts7','sw4','sw5','sw6']];
+const decide=p=>p>=.7?'keep':p>=.4?'border':'drop';
+const chunks=[]; SOURCES.forEach((s,si)=>s.chunks.forEach((c,i)=>chunks.push({id:s.id+i,src:si,idx:i,label:c[0],p:c[1],dec:decide(c[1])})));
+const kept=chunks.filter(c=>c.dec!=='drop');
+kept.forEach(c=>{ let k=SECTIONS.findIndex(a=>a.includes(c.id)); c.cl=k<0?0:k; });
+
+const STAGES=[['queued','Waiting for a build slot at Sanity'],['tldr','Summarizing the material'],['map','Reading through the material'],['triage','Grouping related material'],['plan','Planning the topic tree'],['organize','Organizing topics'],['arrange','Arranging entries in the tree'],['write','Writing entries'],['review','Checking entries against the sources'],['polish','Final pass']];
+
+const OUT10=[
+ ['jev/overview','core','What Jev is: TypeSafe\'s first System One decision model',['System One','typed outputs'],[]],
+ ['jev/primitives/noul','core','Yes/no questions that return the probability of yes',['Noul','calibration'],['jev/primitives/choice']],
+ ['jev/primitives/choice','core','Pick one of up to 255 options, with a probability for each',['Choice'],['jev/primitives/noul','api/limits']],
+ ['jev/primitives/score','peri','A position on a scale, with a probability per level',['Score'],[]],
+ ['api/openrouter','core','Model IDs, the two endpoints, and auth with an OpenRouter key',['model ID','endpoints','auth'],['api/pricing']],
+ ['api/pricing','core','$0.042 per million input tokens; output is free',['pricing'],['evaluation/comparisons']],
+ ['api/limits','peri','32k context, 255-choice ceiling, no image input',['limits'],['jev/primitives/choice']],
+ ['evaluation/use-cases','core','Where decision models fit: filtering, routing, reranking, guardrails',['use cases'],['evaluation/caveats']],
+ ['evaluation/caveats','core','Opaque scores, bias risk, weak on numbers and dates',['caveats','bias'],['evaluation/use-cases']],
+ ['evaluation/comparisons','peri','How Jev\'s price compares with small LLMs',['cost'],['api/pricing']]
+];
+function out40(){
+  const groups={jev:['overview','system-one','typed-outputs','calibration','latency'],'jev/primitives':['noul','choice','score','batching','schemas'],api:['openrouter','decisions-endpoint','systemone-endpoint','auth','pricing','usage-cost','limits','errors'],evaluation:['use-cases','caveats','comparisons','benchmarks','bias','numbers-and-dates'],recipes:['filtering','routing','reranking','guardrails','map-reduce','spam','labeling'],faq:['context-window','images','free-text','rate-limits','sdks','roadmap','support']};
+  const res=[]; let i=0;
+  for(const g in groups) groups[g].forEach((leaf,j)=>{ const core=(i*7)%10<4||j===0; const p=g+'/'+leaf; res.push([p,core?'core':'peri','Sample summary for '+humanize(leaf).toLowerCase()+' written by Sanity from the sources',[],i%5===0&&res.length?[res[res.length-1][0]]:[]]); i++; });
+  return res;
+}
+function humanize(s){ s=s.replace(/-/g,' '); return s[0].toUpperCase()+s.slice(1); }
+
+/* ---------- states ---------- */
+const S=[
+ {grp:'Handoff'},
+ {k:'synth',t:'Synthesizing',ph:'synth',n:{sub:'Kept chunks cross the Jev line and pack into the knowledge core while Opus writes.',data:'<b>synthesis.started</b> / <b>synthesis.section</b> events; the chunk decisions already on screen.',shows:'Kept and borderline squares leave lane 1 and gather in lane 3. Dropped squares stay behind in lane 1 with the tally, so the left side becomes "what was left out". Lane 3 is renamed <b>Knowledge core</b>.',motion:'Squares travel along a gentle curve, staggered by source, ~700ms total. Reduced motion: they appear in the core.'}},
+ {grp:'Sanity build'},
+ {k:'queued',t:'Queued',ph:'stage',si:0,n:{sub:'Sanity has accepted the build but no stage has started.',data:'<b>isBuilding: true</b> with no stage begun. Clock starts at the handoff.',shows:'The stage line appears with <b>queued</b> current and all nine stages ahead. Status: "Queued at Sanity · waiting for a build slot · 0:42". After 2 minutes a second line says queues can take several minutes and the knowledge base will appear in the list when it\'s done.',motion:'Core sits still at low contrast. Nothing pretends to progress.'}},
+ {k:'tldr',t:'tldr',ph:'stage',si:1,n:{sub:'First real stage.',data:'<b>buildStageState</b>: first stage not done.',shows:'<b>queued</b> is struck through; <b>tldr</b> is current. Caption in lane 3: "Summarizing the material".',motion:'A single summary line draws beneath the core.'}},
+ {k:'map',t:'map',ph:'stage',si:2,n:{sub:'Reading.',data:'Current stage id.',shows:'Strip advances. Caption: "Reading through the material".',motion:'A scan line sweeps across the core; squares it passes brighten.'}},
+ {k:'triage',t:'triage',ph:'stage',si:3,n:{sub:'Grouping.',data:'Current stage id. Groups use our own synthesis sections, which are real but ours.',shows:'The core splits into clusters.',motion:'Squares move into clusters, one per synthesized section.'}},
+ {k:'plan',t:'plan',ph:'stage',si:4,n:{sub:'Planning the tree.',data:'Current stage id.',shows:'A root appears above the clusters with lines to each.',motion:'Lines draw from the root.'}},
+ {k:'organize',t:'organize',ph:'stage',si:5,n:{sub:'Restructuring. Often repeats across polls.',data:'Current stage id; repeated polls keep the same stage current.',shows:'Clusters change places under the root. If the stage repeats, nothing new is claimed; the motion loops calmly.',motion:'Clusters swap positions, one pair every ~1.5s.'}},
+ {k:'arrange',t:'arrange',ph:'stage',si:6,n:{sub:'Arranging.',data:'Current stage id.',shows:'Clusters line up as rows under the root, like a tree skeleton. There are no names, because none exist yet.',motion:'Clusters slide into rows.'}},
+ {k:'write',t:'write',ph:'stage',si:7,n:{sub:'Writing.',data:'Current stage id.',shows:'Each row grows a text line beside it.',motion:'Lines draw left to right, staggered.'}},
+ {k:'review',t:'review (conflict found)',ph:'stage',si:8,conflict:1,n:{sub:'Checking. The one stage where we can show something only this pipeline knows.',data:'<b>openIssueCount</b>. Open question: whether it increments during review or only at the end. If only at the end, the count moves to the ready state.',shows:'A check sweep passes the rows. When openIssueCount > 0, lane 3 says "1 conflict between sources found" in plain text and one row is ringed.',motion:'Sweep top to bottom every ~1.6s; checks stay.'}},
+ {k:'polish',t:'polish',ph:'stage',si:9,conflict:1,n:{sub:'Final pass.',data:'Current stage id.',shows:'All rows checked and still. Stage line shows eight struck, polish current.',motion:'One soft shimmer, then still.'}},
+ {grp:'Arrival'},
+ {k:'reveal',t:'Ready: the reveal',ph:'reveal',n:{sub:'The emotional peak. Sanity\'s real outline replaces our visualization.',data:'<b>state</b> flips to <b>ready</b> (or <b>review</b> with an open issue). Then fetch the outline once.',shows:'The core fades out and the outline arrives row by row: purpose line, groups, core entries, peripheral entries. <code>related:</code> links draw once and fade to hover-only. Status: "ready · built by Sanity in 2:18".',motion:'Canvas fades 450ms; rows arrive top to bottom, 40ms apart, 420ms each. Reduced motion: straight swap.'}},
+ {k:'outline',t:'Outline at rest',ph:'outline',n:{sub:'The finished knowledge base.',data:'Outline: <b>path</b>, <b>[core]/[peripheral]</b>, one-line summary, <b>topics</b>, <b>related</b>.',flagOutline:1,shows:'Tree grouped by path segment. Core entries lead each group with weight, a filled marker and their summary. Peripheral entries are lighter, hollow marker, summary on hover. Right edge shows the number of related entries.',motion:'None at rest.'}},
+ {k:'hover',t:'Hovering an entry',ph:'outline',hover:'jev/primitives/choice',n:{sub:'Inspecting one entry.',data:'Entry\'s <b>related</b> and <b>topics</b>.',shows:'Row tints, topics appear, related entries get a ringed marker and arcs draw in the gutter between them. Keyboard focus does the same.',motion:'Arcs draw in 200ms.'}},
+ {k:'forty',t:'40-entry outline',ph:'outline',n40:1,n:{sub:'The same 360px holding a large build.',data:'Same outline, 40 entries (sample).',shows:'Scrolls inside the map area. Core always shown; groups with more than three peripheral entries fold them into "+ N peripheral".',motion:'None.'}},
+ {k:'query',t:'Answer lights up entries',ph:'outline',read:['api/openrouter','jev/primitives/noul'],n:{sub:'Query-time continuity, exact.',data:'The retrieval tool\'s entry paths, verbatim from the outline.',shows:'The question sits above the tree. Rows the agent read get the accent tint and a "read" label, scrolled into view. Related links between read entries draw.',motion:'Tint fades in as each read is reported; clears when the next question starts.'}},
+ {k:'issue',t:'Ready with an open issue',ph:'outline',issue:1,n:{sub:'state: review.',data:'<b>state: review</b>, <b>openIssueCount</b>.',shows:'Status reads "ready · 1 issue to review". A plain line above the tree: "Sanity flagged 1 conflict between sources." Testing still works.',motion:'None.'}},
+ {grp:'Failure'},
+ {k:'failed',t:'Failed at write',ph:'failed',si:7,n:{sub:'Sanity\'s build stopped.',data:'Stage status <b>failed</b>, or the build job ending without ready.',shows:'Everything freezes where it was. The stage line marks write as stopped. Status says where it stopped, with Try again. The core stays, because the synthesized material is still ours.',motion:'All motion stops.'},flag:'Check that Try again can re-run only Sanity\'s build (<code>sanity context build</code>) without re-running Jev and synthesis.'}
+];
+const flat=S.filter(x=>x.k);
+let cur=0, width=490, nOut=10, view='outline', playing=null;
+
+/* ---------- state list ---------- */
+const ul=$('#states'); let num=0;
+S.forEach(x=>{ const li=document.createElement('li');
+  if(x.grp){ li.className='grp'; li.textContent=x.grp; ul.appendChild(li); return; }
+  const i=flat.indexOf(x); num++; const b=document.createElement('button'); b.type='button'; b.innerHTML='<span class="n">'+String(num).padStart(2,'0')+'</span><span></span>'; b.lastChild.textContent=x.t; b.onclick=()=>{ stop(); show(i); }; li.appendChild(b); ul.appendChild(li); x.btn=b; });
+
+/* ---------- canvas ---------- */
+const cv=$('#cv'), ctx=cv.getContext('2d'); let W=0,H=0,DPR=1,C={};
+function readC(){ const cs=getComputedStyle(document.documentElement); ['bg','surface','surface-2','ink','ink-2','muted','line','line-2','accent','accent-soft','drop'].forEach(k=>C[k]=cs.getPropertyValue('--'+k).trim()); }
+function resize(){ const r=cv.getBoundingClientRect(); DPR=Math.min(2,devicePixelRatio||1); W=r.width; H=r.height; cv.width=W*DPR; cv.height=H*DPR; }
+new ResizeObserver(resize).observe(cv);
+const sans='Inter,system-ui,sans-serif', mono='ui-monospace,SFMono-Regular,Menlo,monospace';
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+chunks.forEach(c=>{ c.x=0; c.y=0; });
+let t0=performance.now(), order=[0,1,2,3,4,5];
+
+function geo(){ const pad=12, sq=W<420?9:11, gap=W<420?3:4; return {pad,sq,gap,lx:pad,lw:W*0.39-pad,gx:W*0.43,rx:W*0.5,rw:W*0.5-pad}; }
+const TOP=40;
+function lanePos(c){ const g=geo(), B=(H-TOP-12)/3, cols=Math.max(4,Math.floor((g.lw+g.gap)/(g.sq+g.gap))), off=g.lw<150?42:28; return [g.lx+(c.idx%cols)*(g.sq+g.gap)+g.sq/2, TOP+c.src*B+off+Math.floor(c.idx/cols)*(g.sq+g.gap)+g.sq/2]; }
+function clusterBox(k,mode){
+  const g=geo(), y0=TOP+(mode==='compact'||mode==='clusters'?10:30);
+  if(mode==='rows'){ return {x:g.rx+(k%3===0?0:14), y:y0+order.indexOf(k)*24+8, row:true}; }
+  const pos=mode==='plan'?order.indexOf(k):k; const cw=g.rw/3; return {x:g.rx+(pos%3)*cw+6, y:y0+Math.floor(pos/3)*56+(mode==='plan'?22:6)};
+}
+function coreTargets(mode){
+  const g=geo(), s=g.sq, gp=g.gap;
+  if(mode==='compact'){ const cols=Math.max(4,Math.floor((g.rw-8)/(s+gp))); kept.forEach((c,i)=>{ c.tx=g.rx+4+(i%cols)*(s+gp)+s/2; c.ty=TOP+18+Math.floor(i/cols)*(s+gp)+s/2; }); return; }
+  const byCl={}; kept.forEach(c=>{ (byCl[c.cl]=byCl[c.cl]||[]).push(c); });
+  for(const k in byCl){ const b=clusterBox(+k,mode);
+    byCl[k].forEach((c,i)=>{ if(b.row){ c.tx=b.x+i*(s+2)+s/2; c.ty=b.y; } else { c.tx=b.x+(i%3)*(s+2)+s/2; c.ty=b.y+Math.floor(i/3)*(s+2)+s/2; } }); }
+}
+function modeFor(st){
+  if(!st) return 'lane';
+  if(st.ph==='synth') return 'compact';
+  if(st.ph==='stage'||st.ph==='failed'){ const i=st.si; if(i<=2) return 'compact'; if(i===3) return 'clusters'; if(i<=5) return 'plan'; return 'rows'; }
+  if(st.ph==='reveal'||st.ph==='outline') return view==='built'?'rows':'rows';
+  return 'lane';
+}
+function frame(now){
+  const st=flat[cur]; const mode=modeFor(st), rm=reduced||$('#mSeg [data-m="reduced"]').getAttribute('aria-pressed')==='true';
+  const tt=(now-t0)/1000, k=rm?1:0.12;
+  if(st.k==='organize'&&!rm){ const step=Math.floor(tt/1.5)%4; const perms=[[0,1,2,3,4,5],[1,0,2,3,5,4],[1,3,2,0,5,4],[4,3,1,0,5,2]]; order=perms[step]; } else if(!(st.ph==='stage'||st.ph==='failed')||st.si<5) order=[0,1,2,3,4,5]; else if(st.k!=='organize') order=[4,3,1,0,5,2];
+  chunks.forEach(c=>{ const p=lanePos(c); c.lx=p[0]; c.ly=p[1]; c.tx=p[0]; c.ty=p[1]; });
+  if(mode!=='lane') coreTargets(mode);
+  if(!chunks[0].init){ chunks.forEach(c=>{ c.x=c.lx; c.y=c.ly; c.init=1; }); }
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  const g=geo();
+  ctx.font='600 11px '+sans; ctx.textBaseline='alphabetic'; ctx.textAlign='left'; ctx.fillStyle=C.muted;
+  ctx.fillText('1  Sources',g.lx,18); ctx.textAlign='center'; ctx.fillText('2  Jev',g.gx,18); ctx.textAlign='left';
+  const live=st.ph==='stage'||st.ph==='synth'; ctx.fillStyle=live?C.accent:C.muted; ctx.fillText(st.ph==='synth'||st.ph==='stage'||st.ph==='failed'?'3  Knowledge core':'3  Knowledge Base',g.rx,18);
+  ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(g.lx,26.5); ctx.lineTo(W-g.pad,26.5); ctx.stroke();
+  ctx.setLineDash([3,4]); ctx.strokeStyle=C['line-2']; ctx.beginPath(); ctx.moveTo(g.gx+.5,TOP-4); ctx.lineTo(g.gx+.5,H-12); ctx.stroke(); ctx.setLineDash([]);
+  const B=(H-TOP-12)/3;
+  SOURCES.forEach((s,i)=>{ const y=TOP+i*B; const mine=chunks.filter(c=>c.src===i), kp=mine.filter(c=>c.dec!=='drop').length;
+    ctx.font='500 12px '+sans; ctx.fillStyle=C.ink; ctx.textAlign='left'; ctx.fillText(s.domain,g.lx,y+14);
+    ctx.font='400 11px '+sans; ctx.fillStyle=C.muted; const tl=mode==='lane'?kp+' of '+mine.length+' kept':kp+' kept →'; if(g.lw<150){ ctx.textAlign='left'; ctx.fillText(tl,g.lx,y+29); } else { ctx.textAlign='right'; ctx.fillText(tl,g.lx+g.lw,y+14); } });
+  // plan lines / rows skeleton
+  const lineA=st.ph==='failed'?1:Math.min(1,(tt)/1.2);
+  if(mode==='plan'||mode==='rows'){
+    const rootX=g.rx+8, rootY=TOP+14;
+    ctx.fillStyle=C.ink; ctx.beginPath(); ctx.arc(rootX,rootY,3,0,7); ctx.fill();
+    ctx.strokeStyle=C['line-2']; ctx.lineWidth=1; ctx.globalAlpha=(st.k==='plan'&&!rm)?lineA:1;
+    for(let kk=0;kk<6;kk++){ const b=clusterBox(kk,mode); ctx.beginPath();
+      if(mode==='rows'){ ctx.moveTo(rootX,rootY+3); ctx.lineTo(rootX,b.y); ctx.lineTo(b.x-4,b.y); }
+      else { ctx.moveTo(rootX,rootY+3); ctx.quadraticCurveTo(rootX,b.y-8,b.x+14,b.y-2); }
+      ctx.stroke(); }
+    ctx.globalAlpha=1;
+  }
+  // write bars / review checks
+  const rowsOn=mode==='rows';
+  if(rowsOn&&(st.si>=7||st.ph==='reveal'||st.ph==='outline')){
+    for(let kk=0;kk<6;kk++){ const b=clusterBox(kk,'rows'); const n=kept.filter(c=>c.cl===kk).length; const x0=b.x+n*(g.sq+2)+8;
+      const full=(W-g.pad-18)-x0; const target=full*(.45+((kk*37)%40)/100);
+      let prog=1; if(st.k==='write'&&!rm) prog=Math.max(0,Math.min(1,(tt-kk*.35)/1.4));
+      ctx.fillStyle=C['line-2']; rr(x0,b.y-2,Math.max(0,target*prog),4,2); ctx.fill();
+      if(st.si>=8||st.ph==='reveal'||st.ph==='outline'){ const sweepY=rm||st.si>8?1e9:TOP+30+((tt%1.6)/1.6)*170; if(b.y<sweepY){ ctx.strokeStyle=C.accent; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(W-g.pad-14,b.y); ctx.lineTo(W-g.pad-10,b.y+3); ctx.lineTo(W-g.pad-4,b.y-4); ctx.stroke(); } }
+      if(st.conflict&&kk===3){ ctx.strokeStyle=C.ink; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(b.x-10,b.y,5,0,7); ctx.stroke(); ctx.fillStyle=C.ink; ctx.font='700 8px '+sans; ctx.textAlign='center'; ctx.fillText('!',b.x-10,b.y+3); }
+    }
+    if(st.k==='review'&&!rm){ const y=TOP+30+((tt%1.6)/1.6)*170; ctx.strokeStyle=C.accent; ctx.globalAlpha=.35; ctx.beginPath(); ctx.moveTo(g.rx,y); ctx.lineTo(W-g.pad,y); ctx.stroke(); ctx.globalAlpha=1; }
+  }
+  // chunks
+  const scanX=(st.k==='map'&&!rm)?g.rx+((tt%2.2)/2.2)*(g.rw+20):-1;
+  const dim=st.k==='queued';
+  chunks.forEach(c=>{ c.x+=(c.tx-c.x)*k; c.y+=(c.ty-c.y)*k; const s=g.sq, x=c.x-s/2, y=c.y-s/2;
+    ctx.globalAlpha=(dim&&c.dec!=='drop')?.45:1; rr(x,y,s,s,2);
+    if(c.dec==='keep'){ ctx.fillStyle=C.accent; ctx.fill(); }
+    else if(c.dec==='border'){ ctx.fillStyle=C['accent-soft']; ctx.fill(); ctx.strokeStyle=C.accent; ctx.lineWidth=1.2; ctx.stroke(); }
+    else { ctx.fillStyle=C['surface-2']; ctx.fill(); ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.stroke(); ctx.strokeStyle=C.drop; ctx.beginPath(); ctx.moveTo(x+3,y+s-3); ctx.lineTo(x+s-3,y+3); ctx.stroke(); }
+    if(scanX>0&&c.dec!=='drop'&&Math.abs(c.x-scanX)<10){ ctx.strokeStyle=C.ink; ctx.lineWidth=1.4; rr(x-2,y-2,s+4,s+4,3); ctx.stroke(); }
+    ctx.globalAlpha=1; });
+  if(scanX>0){ ctx.strokeStyle=C.accent; ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(scanX,TOP+10); ctx.lineTo(scanX,TOP+80); ctx.stroke(); ctx.globalAlpha=1; }
+  if(st.k==='tldr'||(mode==='compact'&&st.si>1)){ const w=g.rw*.7*(st.k==='tldr'&&!rm?Math.min(1,tt/1.5):1); ctx.fillStyle=C['line-2']; rr(g.rx+4,TOP+92,w,4,2); ctx.fill(); }
+  // caption
+  if(st.ph==='synth'||st.ph==='stage'||st.ph==='failed'){
+    const cy=H-58; ctx.textAlign='left'; ctx.font='500 12px '+sans; ctx.fillStyle=C.ink;
+    const cap=st.ph==='synth'?'Opus is writing the kept material':st.ph==='failed'?'Stopped while writing entries':STAGES[st.si][1];
+    ctx.fillText(ell(cap,g.rw),g.rx,cy);
+    ctx.font='400 11px '+sans; ctx.fillStyle=C.muted;
+    const l2=st.ph==='synth'?'20 kept chunks, 20.1k tokens':st.ph==='failed'?'The core is kept. Try again restarts only Sanity\'s build.':'Motion shows the stage. Entries appear when Sanity finishes.';
+    wrap(l2,g.rx,cy+15,g.rw,14,3);
+    if(st.conflict){ ctx.font='600 12px '+sans; ctx.fillStyle=C.ink; ctx.fillText(ell('1 conflict between sources found',g.rw),g.rx,cy-20); }
+  }
+  requestAnimationFrame(frame);
+}
+function wrap(t,x,y,max,lh,lines){ const words=t.split(' '); let line='', n=0; for(const w of words){ const test=line?line+' '+w:w; if(ctx.measureText(test).width>max&&line){ ctx.fillText(line,x,y+n*lh); n++; line=w; if(n>=lines) return; } else line=test; } if(line&&n<lines) ctx.fillText(line,x,y+n*lh); }
+function ell(t,max){ if(ctx.measureText(t).width<=max) return t; while(t.length>1&&ctx.measureText(t+'…').width>max) t=t.slice(0,-1); return t+'…'; }
+
+/* ---------- outline (DOM) ---------- */
+function buildTree(list){
+  const tree=$('#tree'); tree.innerHTML='';
+  const groups=new Map();
+  list.forEach(e=>{ const parts=e[0].split('/'); const g=parts[0]; const sub=parts.length>2?parts.slice(1,-1).join('/'):''; if(!groups.has(g)) groups.set(g,new Map()); const gm=groups.get(g); if(!gm.has(sub)) gm.set(sub,[]); gm.get(sub).push(e); });
+  let i=0;
+  const row=(e,parent)=>{ const b=document.createElement('button'); b.type='button'; b.className='entry '+(e[1]==='core'?'core':'peri'); b.dataset.path=e[0]; b.style.animationDelay=(i++*40)+'ms';
+    const leaf=e[0].split('/').pop();
+    b.innerHTML='<span class="mk"></span><span class="en"></span><span class="rel"></span><span class="sm"></span><span class="tp"></span>';
+    b.querySelector('.en').textContent=humanize(leaf); b.title=e[0];
+    b.querySelector('.rel').textContent=e[4].length?'↔ '+e[4].length:'';
+    b.querySelector('.sm').textContent=e[2];
+    b.querySelector('.tp').textContent=e[3].length?'topics: '+e[3].join(', ')+(e[4].length?' · related: '+e[4].join(', '):''):(e[4].length?'related: '+e[4].join(', '):'');
+    b.addEventListener('mouseenter',()=>hoverOn(e[0])); b.addEventListener('mouseleave',()=>hoverOn(null));
+    b.addEventListener('focus',()=>hoverOn(e[0])); b.addEventListener('blur',()=>hoverOn(null));
+    parent.appendChild(b); };
+  for(const [g,subs] of groups){
+    const gd=document.createElement('div'); gd.className='ogroup'; const gh=document.createElement('div'); gh.className='gh'; gh.textContent=g+'/'; gh.style.animationDelay=(i++*40)+'ms'; gd.appendChild(gh);
+    for(const [sub,es] of subs){
+      let host=gd; if(sub){ host=document.createElement('div'); host.className='osub'; const sh=document.createElement('div'); sh.className='gh'; sh.textContent=sub+'/'; sh.style.animationDelay=(i++*40)+'ms'; host.appendChild(sh); gd.appendChild(host); }
+      const core=es.filter(e=>e[1]==='core'), peri=es.filter(e=>e[1]!=='core');
+      core.forEach(e=>row(e,host));
+      if(peri.length>3){ peri.slice(0,0).forEach(e=>row(e,host)); const m=document.createElement('button'); m.type='button'; m.className='more'; m.textContent='+ '+peri.length+' peripheral'; m.style.animationDelay=(i++*40)+'ms'; m.onclick=()=>{ m.remove(); peri.forEach(e=>row(e,host)); }; host.appendChild(m); }
+      else peri.forEach(e=>row(e,host));
+    }
+    tree.appendChild(gd);
+  }
+  const nCore=list.filter(e=>e[1]==='core').length;
+  $('#oCount').innerHTML='Outline · <b>'+list.length+'</b> entries · '+nCore+' core';
+}
+let relMap={};
+function drawArcs(paths,strong){
+  const svg=$('#arcs'), box=$('#tree'); svg.innerHTML='';
+  svg.setAttribute('height',box.scrollHeight+20); svg.style.height=(box.scrollHeight+20)+'px';
+  const top=box.offsetTop;
+  const yOf=p=>{ const el=box.querySelector('[data-path="'+CSS.escape(p)+'"]'); return el?el.offsetTop+12:null; };
+  const pairs=new Set();
+  paths.forEach(p=>(relMap[p]||[]).forEach(q=>{ const key=[p,q].sort().join('|'); if(!pairs.has(key)&&yOf(q)!=null){ pairs.add(key); } }));
+  pairs.forEach(key=>{ const [a,b]=key.split('|'); const ya=yOf(a), yb=yOf(b); const dx=Math.min(12,4+Math.abs(yb-ya)/20);
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d','M16 '+ya+' C '+(16-dx*2)+' '+ya+', '+(16-dx*2)+' '+yb+', 16 '+yb);
+    p.setAttribute('fill','none'); p.setAttribute('stroke','var(--accent)'); p.setAttribute('stroke-width',strong?'1.4':'1'); p.setAttribute('opacity',strong?'.9':'.55'); svg.appendChild(p); });
+  box.querySelectorAll('.entry').forEach(el=>el.classList.toggle('relhi',paths.some(p=>(relMap[p]||[]).includes(el.dataset.path))));
+}
+let forced=null, readSet=[];
+function hoverOn(p){ const q=p||forced; document.querySelectorAll('.entry').forEach(el=>el.classList.toggle('hov',el.dataset.path===q)); drawArcs(q?[q]:readSet,!!q||readSet.length>0); }
+
+/* ---------- render a state ---------- */
+function stripHTML(st){
+  const out=[]; STAGES.forEach(([id],i)=>{ let cls='';
+    if(st.ph==='synth') cls=''; else if(st.ph==='failed'){ cls=i<st.si?'done':i===st.si?'fail':''; }
+    else if(st.ph==='stage'){ cls=i<st.si?'done':i===st.si?'on':''; } else cls='done';
+    out.push('<span class="'+cls+'">'+id+'</span>'); }); return '<div class="strip" aria-label="Sanity build stages">'+out.join('')+'</div>'; }
+const clocks=['','0:42','0:58','1:07','1:19','1:31','1:44','1:52','2:03','2:11','2:15'];
+function show(i){
+  cur=i; const st=flat[i]; t0=performance.now();
+  flat.forEach((x,j)=>x.btn.setAttribute('aria-current',j===i));
+  const stage=$('#stage'), below=$('#below'), stl=$('#st');
+  const outlineMode=st.ph==='reveal'||st.ph==='outline';
+  // status
+  let s='', live=false;
+  if(st.ph==='synth'){ s='synthesizing'; live=true; }
+  else if(st.ph==='stage'){ s=(st.si===0?'queued':'building')+' · '+clocks[st.si]; live=true; }
+  else if(st.ph==='failed'){ s='failed'; }
+  else s=st.issue?'ready · 1 issue to review':'ready · built by Sanity in 2:18';
+  stl.textContent=s; stl.className='st'+(live?' live':'');
+  $('#colBtn').textContent=(st.ph==='synth'||st.ph==='stage')?'Skip to end':'New build';
+  // below
+  if(st.ph==='synth'){ below.innerHTML='<div class="statusline">Opus is writing 20 kept chunks into Markdown</div><div class="frameline">Jev decided in <b>0.5s</b>. Next, Sanity builds the index.</div>'; }
+  else if(st.ph==='stage'){
+    below.innerHTML=stripHTML(st)+'<div class="statusline">'+(st.si===0?'Queued at Sanity · waiting for a build slot · 0:42 elapsed':'Sanity · '+STAGES[st.si][0]+' · '+STAGES[st.si][1].toLowerCase()+' · '+clocks[st.si]+' elapsed')+'</div><div class="frameline">Jev decided in <b>0.5s</b>. Opus wrote in <b>38s</b>. Sanity is building the index now; this is the slow part.</div>'; }
+  else if(st.ph==='failed'){ below.innerHTML=stripHTML(st)+'<div class="failrow"><span class="statusline">Sanity\'s build stopped at write after 1:52.</span><button class="btn sm primary" type="button">Try again</button></div>'; }
+  else { below.innerHTML=view==='built'?'<div class="legend"><span><i class="lg k"></i>kept</span><span><i class="lg u"></i>borderline, kept</span><span><i class="lg d"></i>dropped</span></div>':'<div class="legend"><span><i class="lg c"></i>core to your purpose</span><span><i class="lg p"></i>peripheral</span><span>↔ related entries</span></div>'; }
+  // outline
+  const list=st.n40?out40():OUT10; relMap={}; list.forEach(e=>relMap[e[0]]=e[4]);
+  if(outlineMode){ buildTree(list); }
+  stage.classList.toggle('outlined',outlineMode&&view==='outline');
+  stage.classList.remove('revealing'); if(st.ph==='reveal'){ void stage.offsetWidth; stage.classList.add('revealing'); }
+  forced=st.hover||null; readSet=st.read||[];
+  $('#readFor').hidden=!st.read; if(st.read) $('#readFor').textContent='Read by the test agent for “How do I call Jev through OpenRouter?”';
+  $('#issue').hidden=!st.issue; if(st.issue) $('#issue').innerHTML='Sanity flagged <b>1 conflict between sources</b>. It stays testable.';
+  document.querySelectorAll('.entry').forEach(el=>el.classList.toggle('read',readSet.includes(el.dataset.path)));
+  requestAnimationFrame(()=>{ hoverOn(null);
+    if(st.ph==='reveal'){ const all=Object.keys(relMap).filter(p=>relMap[p].length); drawArcs(all,false); setTimeout(()=>{ if(flat[cur]===st) drawArcs([],false); },1600); }
+    if(st.read){ const el=document.querySelector('.entry.read'); if(el) $('#oscroll').scrollTop=Math.max(0,el.offsetTop-60); } else $('#oscroll').scrollTop=0; });
+  // notes
+  const n=st.n; $('#notes').innerHTML='<h2></h2><p class="sub"></p><dl><div><dt>Data</dt><dd>'+n.data+'</dd></div><div><dt>What it shows</dt><dd>'+n.shows+'</dd></div><div><dt>Motion</dt><dd>'+n.motion+'</dd></div></dl>'+(st.flag?'<div class="flag"><b>To check:</b> '+st.flag+'</div>':'')+(n.flagOutline?'<div class="flag"><b>To check:</b> the outline gives paths, not titles. The mockup shows the last path segment, humanized ("import-routes" becomes "Import routes"), so casing like "OpenRouter" is lost. Use a title field if the API has one.</div>':'');
+  $('#notes h2').textContent=st.t; $('#notes .sub').textContent=n.sub;
+}
+$('#viewSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; view=b.dataset.v; $('#viewSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); show(cur); });
+
+/* ---------- controls ---------- */
+function seg(id,fn){ $(id).addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; $(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); fn(b); }); }
+seg('#wSeg',b=>{ width=+b.dataset.w; $('#frame').style.width=width+'px'; setTimeout(()=>{ resize(); show(cur); },320); });
+seg('#nSeg',b=>{ nOut=+b.dataset.n; const i=flat.findIndex(x=>x.k===(nOut===40?'forty':'outline')); show(i); });
+seg('#mSeg',b=>{ reduced=b.dataset.m==='reduced'; $('#frame').classList.toggle('rm',reduced); show(cur); });
+function stop(){ if(playing){ clearTimeout(playing); playing=null; $('#play').textContent='Play sequence'; } }
+$('#play').addEventListener('click',()=>{ if(playing){ stop(); return; } $('#play').textContent='Stop'; let i=0; const d=k=>k==='reveal'?3200:k==='synth'?2600:k==='organize'?4200:2600;
+  const step=()=>{ show(i); const k=flat[i].k; if(k==='outline'){ stop(); return; } playing=setTimeout(()=>{ i++; step(); },d(k)); }; step(); });
+
+readC(); new MutationObserver(readC).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']}); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readC);
+resize(); show(0); requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

@@ -1,5 +1,11 @@
 import {config} from '../../config.ts'
-import type {RelevanceGate, RelevanceDecision, Usage} from '../../agents/interfaces.ts'
+import type {
+  Candidate,
+  CandidateRanker,
+  RelevanceDecision,
+  RelevanceGate,
+  Usage,
+} from '../../agents/interfaces.ts'
 
 type NoulAnswer = {type: 'noul'; noul: number}
 type JevResponse = {
@@ -76,3 +82,74 @@ export const jevRelevanceGate: RelevanceGate = {
     return {decisions, usage, latencyMs: Date.now() - started}
   },
 }
+
+const CANDIDATE_QUESTION =
+  'Is `candidate` likely to be a substantial, authoritative source of material for this ' +
+  'knowledge base? Judge from its domain and page title. Answer yes for primary ' +
+  'documentation, specifications, reference material and thorough explanations. Answer no ' +
+  'for marketing pages, listicles, link directories, forum threads and pages only ' +
+  'tangentially related to the topic.'
+
+/**
+ * Picks which sources to ingest, before anything is fetched. One request, one
+ * Noul per candidate, typically under half a second for a fraction of a cent.
+ */
+export const jevCandidateRanker: CandidateRanker = {
+  async rank({purpose, topic, candidates}) {
+    const started = Date.now()
+    if (candidates.length === 0) {
+      return {ranked: [], usage: {inputTokens: 0, outputTokens: 0, costUsd: 0}, latencyMs: 0}
+    }
+
+    const keyFor = (index: number) => `cand_${index}`
+    const questions = Object.fromEntries(
+      candidates.map((candidate, index) => [
+        keyFor(index),
+        {
+          type: 'noul',
+          instructions: {
+            candidate: {
+              url: candidate.url,
+              domain: safeHost(candidate.url),
+              title: candidate.title ?? null,
+            },
+            question: CANDIDATE_QUESTION,
+          },
+        },
+      ]),
+    )
+
+    const res = await callJev({
+      model: config.jev.model,
+      state: `Knowledge base purpose: ${purpose}\nTopic: ${topic}`,
+      questions,
+    })
+
+    const ranked = candidates
+      .map((candidate, index) => ({
+        ...candidate,
+        score: res.answers[keyFor(index)]?.noul ?? 0,
+      }))
+      .sort((a, b) => b.score - a.score)
+
+    return {
+      ranked,
+      usage: {
+        inputTokens: res.usage.input_tokens,
+        outputTokens: res.usage.output_tokens,
+        costUsd: (res.usage.input_tokens / 1_000_000) * 0.042,
+      },
+      latencyMs: Date.now() - started,
+    }
+  },
+}
+
+function safeHost(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return null
+  }
+}
+
+export type {Candidate}

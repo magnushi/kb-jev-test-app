@@ -120,6 +120,7 @@ export function Lab({initialCount}: {initialCount: number}) {
         const data = (await res.json()) as {
           intent?: Intent
           sources?: ProposedSource[]
+          selection?: {considered: number; chosen: number; latencyMs: number; costUsd?: number}
           error?: string
         }
         if (!res.ok || !data.intent) throw new Error(data.error ?? 'Could not read that request')
@@ -130,7 +131,13 @@ export function Lab({initialCount}: {initialCount: number}) {
         setThread((t) => [
           ...t.map((m) => (m.kind === 'proposal' ? {...m, locked: true} : m)),
           {kind: 'intent', intent: data.intent!, budget: BUDGET},
-          {kind: 'proposal', id: ++proposalId.current, sources: data.sources ?? [], locked: false},
+          {
+            kind: 'proposal',
+            id: ++proposalId.current,
+            sources: data.sources ?? [],
+            locked: false,
+            selection: data.selection,
+          },
         ])
       } catch (error) {
         setThread((t) => [
