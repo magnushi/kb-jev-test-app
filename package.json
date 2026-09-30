@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "slice": "tsx scripts/vertical-slice.ts",
-    "test": "node --test --import tsx tests/**/*.test.ts",
+    "test": "tsx --test tests/**/*.test.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start"

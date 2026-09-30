@@ -62,6 +62,9 @@ export const config = {
     maxChunksPerJevCall: 20,
   },
   limits: {
+    /** Spec §9: a global daily spend cap. When reached, new builds stop but
+     *  existing knowledge bases stay testable. */
+    dailyBudgetUsd: Number(process.env.DAILY_DEMO_BUDGET_USD ?? 20),
     /** DECISIONS.md: >10 builds started in any 5-minute window shows the heavy-load message. */
     burstMaxBuilds: Number(process.env.BURST_MAX_BUILDS ?? 10),
     burstWindowMs: 5 * 60 * 1000,

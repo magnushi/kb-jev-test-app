@@ -34,9 +34,9 @@
 ## Phase 4 — hardening
 - [x] Rate limits (global burst gate, one build per session)
 - [x] 50-knowledge-base cap with deletion
-- [ ] Daily spend kill switch (DAILY_DEMO_BUDGET_USD)
-- [ ] Tests: SSRF first, then chunking and the map reducer
-- [ ] README
+- [x] Daily spend kill switch (DAILY_DEMO_BUDGET_USD)
+- [x] Tests: 28 covering SSRF, chunking, extraction and map state
+- [x] README
 - [ ] Failed-build UI states
 - [ ] Rotate Jev and Anthropic keys before public launch
 

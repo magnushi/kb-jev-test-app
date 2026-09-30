@@ -36,7 +36,10 @@ export async function checkRateLimit(
 ): Promise<{ok: true} | {ok: false; message: string}> {
   const since = new Date(Date.now() - config.limits.burstWindowMs).toISOString()
 
-  const [recent, mine] = await Promise.all([
+  const startOfDay = new Date()
+  startOfDay.setUTCHours(0, 0, 0, 0)
+
+  const [recent, mine, spentToday] = await Promise.all([
     dataset.fetch<number>(`count(*[_type == $type && createdAt > $since])`, {
       type: KB_RECORD_TYPE,
       since,
@@ -45,7 +48,21 @@ export async function checkRateLimit(
       `count(*[_type == $type && sessionId == $sessionId && !(status in ["ready", "failed"])])`,
       {type: KB_RECORD_TYPE, sessionId},
     ),
+    // Summed from measured per-build cost, not estimated from a counter.
+    dataset.fetch<number>(
+      `math::sum(*[_type == $type && createdAt > $since].metrics.estimatedCostUsd)`,
+      {type: KB_RECORD_TYPE, since: startOfDay.toISOString()},
+    ),
   ])
+
+  if ((spentToday ?? 0) >= config.limits.dailyBudgetUsd) {
+    return {
+      ok: false,
+      message:
+        "Today's demo budget is spent, so new builds are paused until tomorrow. " +
+        'Existing knowledge bases are still testable.',
+    }
+  }
 
   if (recent >= config.limits.burstMaxBuilds) {
     return {ok: false, message: 'Sorry, we are experiencing heavy load now. Try again in a few minutes.'}
