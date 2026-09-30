@@ -3,7 +3,7 @@
 **For:** Claude Code (the agent building the app)
 **Answers:** `../BUILD_PHASE_BRIEF.md`
 **Date:** September 30, 2026
-**Status:** Proposed design, reviewed by Magnus in mockup form. Ready for implementation review.
+**Status:** Revision 2, after Claude Code's API review (`DESIGN_FEEDBACK_30_SEPTEMBER.md`). See `RESPONSE_TO_FEEDBACK_30_SEPTEMBER.md` for what changed and why.
 
 `../DESIGN_BRIEF.md` still governs everything else, including its rules: one label per panel, one accent colour, plain-text status, never fake a number. This document only covers the middle column from the end of synthesis to the finished outline.
 
@@ -19,10 +19,10 @@ Files in this folder:
 | Problem in the brief | Answer |
 |---|---|
 | The 2–5 minute wait reads as broken | A **stage line** under the map showing `queued` plus all nine Sanity stages at once (done = struck through, current = underlined with a pulsing dot). An **elapsed clock** in the status. A **framing line** with Jev's and Opus's measured times. |
-| Kept chunks just sit there | The **knowledge core**: at synthesis the kept chunks cross the Jev divider into lane 3 and pack together. Each Sanity stage gets its own motion on the core, with a caption saying the motion only illustrates the stage. |
-| Conflicts are invisible | During `review`, "1 conflict between sources found" in plain text, and one row is ringed. |
-| The reveal throws away the real structure | When the build lands, lane 3 is **replaced by Sanity's outline**: a path tree, core entries first and heavy, peripheral lighter with summaries on hover, `related:` drawn as arcs. |
-| `[core]` shows no cause | A line above the tree quotes the **purpose from the left column**: "Core means central to your purpose: …". |
+| Kept chunks just sit there | The **knowledge core**: at synthesis the kept chunks cross the Jev divider into lane 3 and pack together. Each Sanity stage gets its own step on the core (Calm by default), with a caption saying the motion only illustrates the stage. |
+| Conflicts are invisible | "1 conflict between sources found" in plain text, and one row is ringed, once we know which count is the reviewable one (open, §3). |
+| The reveal throws away the real structure | When the build lands, lane 3 is **replaced by Sanity's outline**, grouped by **tier** (Core to your purpose / Supporting / Background), using real titles and summaries. Slash paths nest inside a tier when present. Hover shows `tldr.excludes`. Arcs only when `neighbors` has data. |
+| `[core]` shows no cause | Core is its own group at the top, and a line above it quotes the **purpose from the left column**: "Core means central to your purpose: …". |
 | Query-time continuity | Rows the agent read (exact paths from the retrieval tool) get the accent tint and a "read" label; the question sits above the tree. |
 
 ## 2. States
@@ -49,13 +49,13 @@ In lane 3, under the core, a caption: the stage's meaning in 12px ink ("Organizi
 |---|---|---|---|
 | 02 | queued | Core still, at ~45% opacity. **Nothing moves.** After 2 minutes, add a line: "Queues can take several minutes. The knowledge base will appear in the list when it's done." | Waiting for a build slot at Sanity |
 | 03 | tldr | A single summary line draws beneath the core (once, ~1.5s) | Summarizing the material |
-| 04 | map | A scan line sweeps across the core; squares it passes get an ink ring (loops, 2.2s) | Reading through the material |
+| 04 | map | Calm: still. Full: a scan line sweeps across the core; squares it passes get an ink ring (loops, 2.2s) | Reading through the material |
 | 05 | triage | Squares regroup into clusters, one per synthesized section | Grouping related material |
 | 06 | plan | A root dot appears above the clusters; lines draw from it to each (once, ~1.2s) | Planning the topic tree |
-| 07 | organize | Clusters swap places under the root (one change every 1.5s, loops) | Organizing topics |
+| 07 | organize | Calm: clusters move once into a new order and stay. Full: they keep swapping, one change every 1.5s | Organizing topics |
 | 08 | arrange | Clusters slide into rows under the root, like a tree skeleton, with no labels | Arranging entries in the tree |
 | 09 | write | Each row grows a text-line bar, staggered (once, ~2s) | Writing entries |
-| 10 | review | A check sweep runs down the rows (loops, 1.6s); rows it passes keep a check. If `openIssueCount > 0`: "1 conflict between sources found" above the caption and a ringed "!" on one row | Checking entries against the sources |
+| 10 | review | Rows get checks (Full motion: a sweep runs down them every 1.6s). If the **reviewable issue count** is above zero and is known to move during review: "1 conflict between sources found" above the caption and a ringed "!" on one row. Copy on hold, see §3 | Checking entries against the sources |
 | 11 | polish | Everything checked and still | Final pass |
 
 The clusters use **our own synthesis sections**, which are real but ours. Nothing in lane 3 claims to be one of Sanity's entries until the outline arrives.
@@ -66,31 +66,39 @@ The clusters use **our own synthesis sections**, which are real but ours. Nothin
 
 ### Arrival
 
-**12 Reveal.** Triggered when `state` flips to `ready` (or `review`). Fetch the outline once, then:
+**12 Reveal.** Triggered when `state` flips to `ready` (or `review`). Fetch the outline once with `kb.context.entries.list()` (path, title, tldr; drains pagination). No MCP endpoint is needed. Then:
 
 - the canvas fades out (450ms);
-- the outline fades in, rows arriving top to bottom: purpose line, group headings, core entries, peripheral entries (each 420ms, 40ms apart, sliding 10px from the left);
-- all `related:` arcs draw once, stay ~1.6s, then clear to hover-only;
+- the outline fades in, rows arriving top to bottom: purpose line, tier headings, entries (each 420ms, 40ms apart, sliding 10px from the left);
+- if any entry has `neighbors`, those arcs draw once, stay ~1.6s, then clear to hover-only. On typical three-source builds `neighbors` is empty and nothing draws;
 - status: "ready · built by Sanity in 2:18" (elapsed time of Sanity's build, measured);
 - the column button changes from "Skip to end" to "New build".
 
 **13 Outline at rest.** Lane 3 is now the whole map area (360px, scrolls inside):
 
-- Header row: "Outline · **10** entries · 7 core" on the left, a small segmented control **Outline | How it was built** on the right. "How it was built" shows the canvas again with its legend.
+- Header row: "Outline · **8** entries" on the left, a small segmented control **Outline | How it was built** on the right. "How it was built" shows the canvas again with its legend.
 - Purpose line: "Core means central to your purpose: “[purpose from the intent card]”".
-- Tree grouped by path: the first segment is a group heading in mono (`jev/`); further segments are indented subheadings (`primitives/`); the last segment is the entry.
-- **Core entries**: 8px filled accent marker, name at 13px/600 ink, one-line summary below at 12px `--ink-2`, always visible. Core entries come first within each group.
-- **Peripheral entries**: 8px hollow marker (`--line-2`), name at 12.5px/500 `--ink-2`, summary only on hover or focus.
-- Right edge: "↔ 2" (mono, muted) when an entry has related entries.
-- The legend below the map changes to: core to your purpose · peripheral · ↔ related entries.
+- **Grouped by tier, from `tldr.centrality`.** Tier headings are 11px/600 uppercase muted with a mono count. Empty tiers are left out.
 
-**14 Hover or focus an entry.** The row gets a `--surface` background, topics and related paths appear under the summary, related entries get a ringed marker, and arcs draw in the left gutter between them. Keyboard focus does the same; every row is a button.
+| Tier (`centrality`) | Heading | Marker | Name | Summary |
+|---|---|---|---|---|
+| `core` | Core to your purpose | 8px filled accent | 13px/600 ink | Always shown, 12px `--ink-2` |
+| `standard` | Supporting | 8px `--accent-soft` fill with accent outline | 13px/500 ink | Always shown |
+| `peripheral` | Background | 8px hollow `--line-2` | 12.5px/500 `--ink-2` | On hover or focus |
 
-**15 40 entries.** Same 360px. Core entries always show. When a group has more than three peripheral entries, they fold into a "+ N peripheral" row that expands on click. The list scrolls inside the map area.
+  The three markers deliberately reuse the kept / borderline / dropped look from the chunk map, so the page has one visual scale for "how central is this".
+- Names use the entry's **`title`** field. Never humanize the path.
+- **Paths are usually flat** at three sources. When an entry's path contains slashes, group those entries by the first path segment inside their tier, under a mono subheading (`api/`). Entries with flat paths come first. Never group flat paths by guessing at themes.
+- Right edge: "↔ 1" (mono, muted) **only** when the entry has `neighbors`.
+- The legend below the map changes to: core to your purpose · supporting · background, plus "↔ related entries" only when some entry has neighbors.
 
-**16 Answer highlights entries.** When the test agent answers, the question appears above the tree in an accent-soft bar ("Read by the test agent for “…”"). Rows whose paths the retrieval tool used get an accent-soft background and a "read" label before the related count, and the first one scrolls into view. Arcs draw between read entries that are related. It clears when the next question starts.
+**14 Hover or focus an entry.** The row gets a `--surface` background and shows **"Left to other entries: …"** from `tldr.excludes`. Where an entry path appears verbatim in that text (e.g. `calling_jev`), show that entry's title in bold instead. This is an exact match against known paths, not parsing, and it doesn't draw arcs. Peripheral entries also reveal their summary. If the entry has `neighbors`, ring those entries' markers and draw arcs in the left gutter. Keyboard focus does the same; every row is a button.
 
-**17 Ready with an open issue.** `state: review`. Status reads "ready · 1 issue to review". A plain line above the tree: "Sanity flagged **1 conflict between sources**. It stays testable." Testing is not blocked.
+**15 40 entries.** The exception, not the norm: a large build where paths nest and some neighbors exist. Same 360px. Still grouped by tier first, with path subheadings inside each tier. When the Background tier has more than three entries, they fold into "+ N background entries". The list scrolls inside the map area.
+
+**16 Answer highlights entries.** The one outline state that still needs the MCP endpoint, because only retrieval knows which paths were read. When the test agent answers, the question appears above the tree in an accent-soft bar ("Read by the test agent for “…”"). Rows whose paths the retrieval tool used get an accent-soft background and a "read" label, and the first one scrolls into view. Arcs draw between read entries only if they are neighbors. It clears when the next question starts.
+
+**17 Ready with an open issue.** `state: review`. Status reads "ready · 1 issue to review". A plain line above the tree: "Sanity flagged **1 conflict between sources**. It stays testable." Testing is not blocked. **Copy on hold** until the reviewable count is confirmed (§3).
 
 ### Failure
 
@@ -98,33 +106,36 @@ The clusters use **our own synthesis sections**, which are real but ours. Nothin
 
 ## 3. Data needed
 
-Everything here is from the brief's verified list except where marked.
+Updated with Claude Code's findings from a real build (`kbt432byCXWQ`, 8 entries, 3 sources).
 
-| UI | Source | Notes |
+| UI | Source | Status |
 |---|---|---|
-| Stage line, current stage | `buildStageState.stages[]` (`id`, `status`) | Current = first stage not `done`. Failed = a stage with failed status, or the job ending without `ready`. |
-| Queued | `isBuilding: true` and no stage started | Its own state, not a spinner. |
-| Elapsed clock | Client clock from `sanity.kb.building` (first poll) | The only time shown. No estimates. |
-| Framing numbers | `jevLatencyMs`; synthesis duration | **Check:** synthesis duration may need timestamps added to `synthesis.started` / `synthesis.complete`. |
-| Conflict count | `openIssueCount` | **Check:** whether it increments during review or only at the end. If only at the end, show it in the ready state (17) only. |
+| Stage line, current stage | `buildStageState.stages[]` (`id`, `status`) | Verified. Current = first stage not `done`. Failed = a failed stage, or the job ending without `ready`. |
+| Queued | `isBuilding: true` and no stage started | Verified. |
+| Elapsed clock | Client clock from the first building poll | Fine. The only time shown. |
+| Framing numbers | `jevLatencyMs`; synthesis duration from `at` timestamps on `synthesis.started` → `synthesis.complete` | Available; the events API needs to return the timestamp. |
 | Outcome | `state` (`created` → `ready` / `review`) | Outcome only, never progress. |
-| Outline | path, `[core]`/`[peripheral]`, summary, `topics`, `related` | Fetch once at ready. |
-| Entry names | Last path segment, humanized (`import-routes` → "Import routes") | **Check:** if the API exposes a title, use it. Humanizing loses casing ("Openrouter"). |
-| Read entries | Retrieval tool's entry paths | Exact, verbatim from the outline. |
-| Try again | Re-run `sanity context build <id>` only | **Check:** confirm this works without re-running Jev and synthesis. |
+| Outline | `kb.context.entries.list()`: `path`, `title`, `tldr` (centrality, summary, excludes, neighbors) | Verified. `entries.get({path})` adds topicHeadings, body, citations if needed later. |
+| Tier | `tldr.centrality`: `core` / `standard` / `peripheral` | Verified; always populated. The sample build was 6 core, 2 standard, 0 peripheral. |
+| Hover detail | `tldr.excludes` | Verified; populated. |
+| Arcs, "↔ N" | `tldr.neighbors` | Empty on every entry in the sample. Progressive enhancement only. **Ask the Sanity Context team** whether it fills in on larger knowledge bases. |
+| Read entries | Retrieval tool's entry paths via Context MCP | Needs the MCP endpoint. |
+| Conflict / issue count (states 10, 17) | The **reviewable** count: conflicts and add/remove/split proposals | **Open.** `openIssueCount` was 0 while `issues.list()` returned 4; coverage gaps are recorded but not surfaced. Also open: whether it moves during `review`. |
+| Try again | `kb.context.build()` only; imported Markdown persists | Plausible, not yet tested. |
 
 Suggested additions to `components/knowledge-map/types.ts`:
 
 ```ts
 type BuildStageId = 'tldr'|'map'|'triage'|'plan'|'organize'|'arrange'|'write'|'review'|'polish'
+type Centrality = 'core' | 'standard' | 'peripheral'
 
 type OutlineEntry = {
-  path: string            // "api/openrouter"
-  tier: 'core' | 'peripheral'
-  summary: string
-  topics: string[]
-  related: string[]       // paths
-  title?: string          // if the API provides one
+  path: string            // usually flat: "calling_jev"; sometimes "api/auth"
+  title: string
+  centrality: Centrality
+  summary: string         // from tldr
+  excludes?: string       // tldr.excludes, prose
+  neighbors: string[]     // tldr.neighbors, often empty
 }
 
 type MapState = {
@@ -133,7 +144,7 @@ type MapState = {
   buildStages?: {id: BuildStageId; status: string}[]
   buildStartedAt?: number
   synthesisMs?: number
-  openIssueCount?: number
+  reviewableIssueCount?: number
   outcome?: 'ready' | 'review'
   outline?: OutlineEntry[]
   readPaths?: string[]    // set per test answer
@@ -142,13 +153,12 @@ type MapState = {
 
 ## 4. Motion
 
-**Character: mostly still.** Motion plays when something real changes; most of a long build is a still picture with a pulsing dot and a running clock.
+**Default: Calm.** Motion happens when something real changes; between changes the picture is still, with a pulsing dot and a running clock. Both reviews leaned this way for a 2–5 minute wait.
 
-- **On state change (once):** chunk migration into the core (~0.5–0.7s, eased), regrouping at triage/plan/arrange, tldr line (1.5s), plan lines (1.2s), write bars (~2s staggered), reveal (canvas fade 450ms, rows 420ms each, 40ms apart), arcs on arrival (~1.6s then clear).
-- **Continuous:** the pulsing dot on the current stage (1.4s), and gentle loops in three stages: the map scan (2.2s), organize swaps (every 1.5s), and the review sweep (1.6s).
-- **Calmer option (Magnus may prefer it):** drop the three loops so the only continuous motion is the pulsing dot. Long stages then show a still picture; the dot and clock still show it's working.
-- **Reduced motion:** every state renders its final picture instantly (all checks shown, all bars full, no scan or sweep), the dot doesn't pulse, and the reveal is a straight swap.
-- **Mockup differences:** the notes mention "one soft shimmer" at polish, but the mockup doesn't implement it and it's optional. Hover arcs appear instantly in the mockup; 200ms is fine in production.
+- **On state change (once):** chunk migration into the core (~0.5–0.7s, eased), regrouping at triage/plan/organize/arrange, tldr line (1.5s), plan lines (1.2s), write bars (~2s staggered), reveal (canvas fade 450ms, rows 420ms each, 40ms apart), arcs on arrival only when neighbors exist (~1.6s then clear).
+- **Continuous:** only the pulsing dot on the current stage (1.4s).
+- **Full (optional):** adds three gentle loops: the map scan (2.2s), organize swaps (every 1.5s) and the review sweep (1.6s). The mockup's Motion control switches between Calm, Full and Reduced.
+- **Reduced motion:** every state renders its final picture instantly, the dot doesn't pulse, and the reveal is a straight swap.
 
 ## 5. Responsive
 
@@ -158,9 +168,10 @@ type MapState = {
 ## 6. Engineering notes
 
 - **Keep the canvas for lanes 1–3 during the build.** The chunk migration, clusters and stage motion are all drawn from one state, re-reading colours from the CSS tokens on theme change, as today.
-- **Render the finished outline in the DOM, not on the canvas.** It's text-heavy, needs scrolling, hover, keyboard focus and screen-reader access. Overlay it on the canvas area and cross-fade. Draw the `related:` arcs as an absolutely positioned SVG in the outline's left gutter, computed from row offsets.
+- **Render the finished outline in the DOM, not on the canvas.** It's text-heavy, needs scrolling, hover, keyboard focus and screen-reader access. Overlay it on the canvas area and cross-fade. When `neighbors` has data, draw the arcs as an absolutely positioned SVG in the outline's left gutter, computed from row offsets.
 - **"How it was built"** toggles back to the canvas and swaps the legend.
-- **Bounded:** outline scrolls inside 360px; peripheral entries fold per group above three; clusters are capped by the number of synthesis sections.
+- **Bounded:** outline scrolls inside 360px; Background entries fold above three; clusters are capped by the number of synthesis sections.
+- **Outline without MCP:** states 12–15 can be built and tested now against `entries.list()`. Only state 16 waits on the MCP endpoint.
 - **Tokens:** no new colours. Accent for current, kept, core and read; `--ink` for the conflict mark; neutrals for everything else.
 
 ## 7. Acceptance checklist
@@ -169,10 +180,12 @@ type MapState = {
 - [ ] Stage line shows all nine stages plus queued; current underlined, done struck through; no percentages or estimates anywhere.
 - [ ] Elapsed clock and framing line use measured numbers only.
 - [ ] Kept chunks migrate into the knowledge core at synthesis; lane 3 is labelled "Knowledge core" until ready.
-- [ ] Each stage has its described motion, and a caption says the motion is illustrative.
-- [ ] Conflict count shows only when `openIssueCount > 0`.
-- [ ] At ready, the outline replaces lane 3 with the described reveal; core vs peripheral follows the outline tags; the purpose line quotes the user's purpose.
-- [ ] Related arcs show once on arrival, then on hover/focus and between read entries only.
+- [ ] Each stage has its described step, and the caption says the motion is illustrative. Calm is the default.
+- [ ] Issue count shows only once the reviewable count is confirmed, and only when above zero.
+- [ ] At ready, the outline replaces lane 3 with the described reveal, grouped by tier from `tldr.centrality`, using `title`; the purpose line quotes the user's purpose.
+- [ ] Slash paths nest inside tiers; flat paths are never grouped by guesswork.
+- [ ] Hover shows `tldr.excludes`, with exact path matches shown as titles.
+- [ ] Arcs and "↔ N" appear only when `neighbors` has data.
 - [ ] Read entries light up from exact retrieval paths.
 - [ ] `state: review` shows the issue line and stays testable.
 - [ ] Failure freezes, names the stage, and offers Try again.

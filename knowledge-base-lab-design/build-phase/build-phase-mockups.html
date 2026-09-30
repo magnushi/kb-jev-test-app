@@ -130,6 +130,11 @@ code,.mono{font-family:var(--mono);font-size:12px}
 .entry:hover,.entry.hov{background:var(--surface)}
 .entry .mk{width:8px;height:8px;border-radius:2px;margin-left:4px;align-self:center}
 .entry.core .mk{background:var(--accent)}
+.entry.std .mk{background:var(--accent-soft);box-shadow:inset 0 0 0 1.2px var(--accent)}
+.entry.std .en{font-weight:500;color:var(--ink)}
+.tierh{font-family:var(--sans)!important;font-size:11px!important;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:8px 0 4px 4px!important}
+.tierh span{font-family:var(--mono);letter-spacing:0;margin-left:4px}
+.ogroup+.ogroup{margin-top:10px}
 .entry.peri .mk{box-shadow:inset 0 0 0 1.2px var(--line-2)}
 .entry .en{font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .entry.core .en{font-weight:600;color:var(--ink)}
@@ -138,7 +143,8 @@ code,.mono{font-family:var(--mono);font-size:12px}
 .entry .sm{grid-column:2/4;font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .entry.peri .sm{display:none}
 .entry.peri.hov .sm,.entry.peri:hover .sm,.entry.peri:focus-visible .sm{display:block}
-.entry .tp{grid-column:2/4;font-size:11.5px;color:var(--muted);display:none}
+.entry .tp{grid-column:2/4;font-size:11.5px;color:var(--muted);display:none;white-space:normal}
+.entry .tp b{color:var(--ink-2);font-weight:600}
 .entry.hov .tp{display:block}
 .entry.read{background:var(--accent-soft)}
 .entry.read .en{color:var(--ink)}
@@ -176,7 +182,7 @@ code,.mono{font-family:var(--mono);font-size:12px}
     <button class="btn primary" id="play" type="button">Play sequence</button>
     <span><span class="ctl-label">Width</span><span class="seg" id="wSeg"><button type="button" data-w="490" aria-pressed="true">Desktop</button><button type="button" data-w="400" aria-pressed="false">900px</button><button type="button" data-w="368" aria-pressed="false">Phone</button></span></span>
     <span><span class="ctl-label">Outline size</span><span class="seg" id="nSeg"><button type="button" data-n="10" aria-pressed="true">10 entries</button><button type="button" data-n="40" aria-pressed="false">40 entries</button></span></span>
-    <span><span class="ctl-label">Motion</span><span class="seg" id="mSeg"><button type="button" data-m="full" aria-pressed="true">Full</button><button type="button" data-m="reduced" aria-pressed="false">Reduced</button></span></span>
+    <span><span class="ctl-label">Motion</span><span class="seg" id="mSeg"><button type="button" data-m="calm" aria-pressed="true">Calm</button><button type="button" data-m="full" aria-pressed="false">Full</button><button type="button" data-m="reduced" aria-pressed="false">Reduced</button></span></span>
   </div>
 
   <div class="viewer">
@@ -209,18 +215,18 @@ code,.mono{font-family:var(--mono);font-size:12px}
   </div>
 
   <section class="decisions">
-    <h2>How this answers the brief</h2>
+    <h2>How this answers the brief (revised after the API review)</h2>
     <div><h3>The wait gets a horizon</h3><p>All nine Sanity stages sit in one line under the map, with <code>queued</code> in front. Done stages are struck through, the current one is underlined. No percentages and no estimates; an elapsed clock is the only time shown, because it's the only time that's true.</p></div>
-    <div><h3>The knowledge core finally exists</h3><p>During synthesis the kept chunks cross the Jev line and pack into a core. Each Sanity stage then gets its own motion on that core: reading, grouping, planning, restructuring, writing, checking. A caption says the motion is ours and the stage is Sanity's.</p></div>
-    <div><h3>The wait is framed, not hidden</h3><p>One line under the stages: Jev's measured time, the synthesis time, and that Sanity's indexing is the slow part. It repeats the Jev story at the moment people have nothing else to read.</p></div>
-    <div><h3>The reveal is the real outline</h3><p>When the build lands, the core fades and lane 3 is replaced by Sanity's outline, rows arriving top to bottom. It's a tree grouped by path, core entries first and heavy, peripheral ones lighter with summaries on hover. <code>related:</code> links draw once on arrival, then only on hover and during answers.</p></div>
-    <div><h3>Core reads as centrality</h3><p>No badge. Core entries lead each group, carry weight and a filled marker, and show their summary. A line above the tree quotes the purpose from the left column, so the cause of "core" is visible on the page.</p></div>
-    <div><h3>4 or 40 entries, same 360px</h3><p>The outline scrolls inside the map area. Core entries always show; when a group has more than three peripheral entries they fold into "+ N peripheral". The build map stays one click away under "How it was built".</p></div>
-    <div><h3>Answers light up exact entries</h3><p>The agent reads entries by path, so the rows it read get the accent tint and a "read" label, and links between them draw. The question it answered sits above the tree.</p></div>
+    <div><h3>The knowledge core finally exists</h3><p>During synthesis the kept chunks cross the Jev line and pack into a core. Each Sanity stage then gets its own step on that core. A caption says the motion is ours and the stage is Sanity's.</p></div>
+    <div><h3>Calm by default</h3><p>Motion happens when a stage changes; between changes the picture is still, with a pulsing dot and the clock. The three looping animations are available as "Full" but are off by default.</p></div>
+    <div><h3>The reveal is the real outline, grouped by tier</h3><p>Real builds have flat paths, so the outline groups by Sanity's centrality: Core to your purpose, Supporting, Background. Slash paths, when they appear, nest inside a tier. Nothing is grouped by guesswork.</p></div>
+    <div><h3>Three tiers, one visual scale</h3><p>Filled, half and hollow markers, reusing the kept / borderline / dropped vocabulary from the chunk map. The purpose line above the tree says what core means.</p></div>
+    <div><h3>Hover says where the boundaries are</h3><p><code>tldr.excludes</code> shows what an entry leaves to other entries, with entry names swapped in for their paths. Arcs appear only when <code>neighbors</code> has data, which is rare at three sources.</p></div>
+    <div><h3>Answers light up exact entries</h3><p>The agent reads entries by path, so the rows it read get the accent tint and a "read" label. This is the one outline state that still needs the MCP endpoint.</p></div>
     <div><h3>Jev and Sanity stay separate</h3><p>Jev's lane stops at the divider. Everything after it is labeled Sanity's work, and the ready state says who built the index.</p></div>
   </section>
 
-  <p class="foot">Sample data throughout. Stage meanings in the captions are our reading of Sanity's stage names and need confirming with the Sanity Context team.</p>
+  <p class="foot">Sample data throughout. Stage meanings in the captions are our reading of Sanity's stage names and need confirming with the Sanity Context team. The issue count in states 10 and 17 is waiting on which field to use.</p>
 </div>
 
 <script>
@@ -243,21 +249,21 @@ kept.forEach(c=>{ let k=SECTIONS.findIndex(a=>a.includes(c.id)); c.cl=k<0?0:k; }
 const STAGES=[['queued','Waiting for a build slot at Sanity'],['tldr','Summarizing the material'],['map','Reading through the material'],['triage','Grouping related material'],['plan','Planning the topic tree'],['organize','Organizing topics'],['arrange','Arranging entries in the tree'],['write','Writing entries'],['review','Checking entries against the sources'],['polish','Final pass']];
 
 const OUT10=[
- ['jev/overview','core','What Jev is: TypeSafe\'s first System One decision model',['System One','typed outputs'],[]],
- ['jev/primitives/noul','core','Yes/no questions that return the probability of yes',['Noul','calibration'],['jev/primitives/choice']],
- ['jev/primitives/choice','core','Pick one of up to 255 options, with a probability for each',['Choice'],['jev/primitives/noul','api/limits']],
- ['jev/primitives/score','peri','A position on a scale, with a probability per level',['Score'],[]],
- ['api/openrouter','core','Model IDs, the two endpoints, and auth with an OpenRouter key',['model ID','endpoints','auth'],['api/pricing']],
- ['api/pricing','core','$0.042 per million input tokens; output is free',['pricing'],['evaluation/comparisons']],
- ['api/limits','peri','32k context, 255-choice ceiling, no image input',['limits'],['jev/primitives/choice']],
- ['evaluation/use-cases','core','Where decision models fit: filtering, routing, reranking, guardrails',['use cases'],['evaluation/caveats']],
- ['evaluation/caveats','core','Opaque scores, bias risk, weak on numbers and dates',['caveats','bias'],['evaluation/use-cases']],
- ['evaluation/comparisons','peri','How Jev\'s price compares with small LLMs',['cost'],['api/pricing']]
+ ['overview','What Jev Is','core','TypeSafe\'s first System One decision model: text in, typed decisions out','How to call it is covered in calling_jev; prices in cost_and_speed',[]],
+ ['question_primitives','Question Primitives: Choice, Noul and Score','core','What each primitive returns: a choice with probabilities, P(yes), or a position on a scale','Endpoints and request shape covered in calling_jev',[]],
+ ['calling_jev','Calling Jev Through OpenRouter','core','Model IDs, the two endpoints, auth with an OpenRouter key, and usage.cost','Per-token prices covered in cost_and_speed',[]],
+ ['cost_and_speed','Cost and Speed','core','$0.042 per million input tokens, free output, 70–500 ms end to end','How it compares with small LLMs covered in comparisons',[]],
+ ['fit_and_limits','Where Jev Fits, and Its Limits','core','Good for filtering, routing and reranking; weak on numbers, dates and adversarial input','The framing behind decision models covered in system_one_framing',[]],
+ ['comparisons','Comparisons With Small LLMs','standard','How Jev\'s price and speed compare with GPT-5 Nano and similar models','Jev\'s own pricing details covered in cost_and_speed',[]],
+ ['system_one_framing','The System One Framing','standard','Kahneman\'s fast-versus-slow thinking, as TypeSafe uses it to explain decision models','What Jev actually returns covered in question_primitives',[]],
+ ['benchmarks','Published Benchmarks','peripheral','TypeSafe\'s benchmark claims, which are self-reported','',[]]
 ];
 function out40(){
-  const groups={jev:['overview','system-one','typed-outputs','calibration','latency'],'jev/primitives':['noul','choice','score','batching','schemas'],api:['openrouter','decisions-endpoint','systemone-endpoint','auth','pricing','usage-cost','limits','errors'],evaluation:['use-cases','caveats','comparisons','benchmarks','bias','numbers-and-dates'],recipes:['filtering','routing','reranking','guardrails','map-reduce','spam','labeling'],faq:['context-window','images','free-text','rate-limits','sdks','roadmap','support']};
-  const res=[]; let i=0;
-  for(const g in groups) groups[g].forEach((leaf,j)=>{ const core=(i*7)%10<4||j===0; const p=g+'/'+leaf; res.push([p,core?'core':'peri','Sample summary for '+humanize(leaf).toLowerCase()+' written by Sanity from the sources',[],i%5===0&&res.length?[res[res.length-1][0]]:[]]); i++; });
+  const res=[]; const tiers=['core','core','standard','standard','standard','peripheral'];
+  const areas={api:['endpoints','auth','errors','rate_limits','usage_cost','sdks'],primitives:['choice','noul','score','schemas','batching'],recipes:['filtering','routing','reranking','guardrails','map_reduce','spam','labeling','deduplication','moderation','triage'],evaluation:['benchmarks','comparisons','bias','numbers_and_dates'],faq:['context_window','images','free_text','roadmap','support','pricing_history']};
+  let i=0;
+  for(const a in areas) areas[a].forEach((leaf,j)=>{ const path=a+'/'+leaf; const tier=i%5===0?'core':i%3===0?'peripheral':'standard'; res.push([path,humanize(leaf.replace(/_/g,' ')),tier,'Sample summary for '+leaf.replace(/_/g,' ')+', written by Sanity from the sources','',j>0&&i%4===0?[a+'/'+areas[a][0]]:[]]); i++; });
+  ['overview','history','glossary','team_and_company','licensing','changelog','related_models','further_reading','community'].forEach((leaf,k)=>res.push([leaf,humanize(leaf.replace(/_/g,' ')),k<2?'core':k<5?'standard':'peripheral','Sample summary for '+leaf.replace(/_/g,' '),'',[]]));
   return res;
 }
 function humanize(s){ s=s.replace(/-/g,' '); return s[0].toUpperCase()+s.slice(1); }
@@ -269,26 +275,26 @@ const S=[
  {grp:'Sanity build'},
  {k:'queued',t:'Queued',ph:'stage',si:0,n:{sub:'Sanity has accepted the build but no stage has started.',data:'<b>isBuilding: true</b> with no stage begun. Clock starts at the handoff.',shows:'The stage line appears with <b>queued</b> current and all nine stages ahead. Status: "Queued at Sanity · waiting for a build slot · 0:42". After 2 minutes a second line says queues can take several minutes and the knowledge base will appear in the list when it\'s done.',motion:'Core sits still at low contrast. Nothing pretends to progress.'}},
  {k:'tldr',t:'tldr',ph:'stage',si:1,n:{sub:'First real stage.',data:'<b>buildStageState</b>: first stage not done.',shows:'<b>queued</b> is struck through; <b>tldr</b> is current. Caption in lane 3: "Summarizing the material".',motion:'A single summary line draws beneath the core.'}},
- {k:'map',t:'map',ph:'stage',si:2,n:{sub:'Reading.',data:'Current stage id.',shows:'Strip advances. Caption: "Reading through the material".',motion:'A scan line sweeps across the core; squares it passes brighten.'}},
+ {k:'map',t:'map',ph:'stage',si:2,n:{sub:'Reading.',data:'Current stage id.',shows:'Strip advances. Caption: "Reading through the material".',motion:'Calm (default): still. Full: a scan line sweeps across the core every 2.2s and squares it passes brighten.'}},
  {k:'triage',t:'triage',ph:'stage',si:3,n:{sub:'Grouping.',data:'Current stage id. Groups use our own synthesis sections, which are real but ours.',shows:'The core splits into clusters.',motion:'Squares move into clusters, one per synthesized section.'}},
  {k:'plan',t:'plan',ph:'stage',si:4,n:{sub:'Planning the tree.',data:'Current stage id.',shows:'A root appears above the clusters with lines to each.',motion:'Lines draw from the root.'}},
- {k:'organize',t:'organize',ph:'stage',si:5,n:{sub:'Restructuring. Often repeats across polls.',data:'Current stage id; repeated polls keep the same stage current.',shows:'Clusters change places under the root. If the stage repeats, nothing new is claimed; the motion loops calmly.',motion:'Clusters swap positions, one pair every ~1.5s.'}},
+ {k:'organize',t:'organize',ph:'stage',si:5,n:{sub:'Restructuring. Often repeats across polls.',data:'Current stage id; repeated polls keep the same stage current.',shows:'Clusters change places under the root. If the stage repeats, nothing new is claimed; the motion loops calmly.',motion:'Calm (default): clusters move once into a new order and stay. Full: clusters keep swapping, one change every ~1.5s.'}},
  {k:'arrange',t:'arrange',ph:'stage',si:6,n:{sub:'Arranging.',data:'Current stage id.',shows:'Clusters line up as rows under the root, like a tree skeleton. There are no names, because none exist yet.',motion:'Clusters slide into rows.'}},
  {k:'write',t:'write',ph:'stage',si:7,n:{sub:'Writing.',data:'Current stage id.',shows:'Each row grows a text line beside it.',motion:'Lines draw left to right, staggered.'}},
- {k:'review',t:'review (conflict found)',ph:'stage',si:8,conflict:1,n:{sub:'Checking. The one stage where we can show something only this pipeline knows.',data:'<b>openIssueCount</b>. Open question: whether it increments during review or only at the end. If only at the end, the count moves to the ready state.',shows:'A check sweep passes the rows. When openIssueCount > 0, lane 3 says "1 conflict between sources found" in plain text and one row is ringed.',motion:'Sweep top to bottom every ~1.6s; checks stay.'}},
+ {k:'review',t:'review (conflict found)',ph:'stage',si:8,conflict:1,flag:'Which count to show is still open. <b>openIssueCount</b> was 0 while <b>issues.list()</b> returned 4 on the same build; only conflicts and add/remove/split proposals are surfaced for review. Show the filtered, reviewable count, and only during the build if it actually moves during review. Otherwise show it in the ready state only.',n:{sub:'Checking. The one stage where we can show something only this pipeline knows.',data:'The <b>reviewable issue count</b> (conflicts and proposals), not the raw issue list. Field or filter to be confirmed.',shows:'A check sweep passes the rows. When the reviewable count is above zero, lane 3 says "1 conflict between sources found" in plain text and one row is ringed.',motion:'Full: sweep top to bottom every ~1.6s. Calm and reduced: all rows checked, no sweep.'}},
  {k:'polish',t:'polish',ph:'stage',si:9,conflict:1,n:{sub:'Final pass.',data:'Current stage id.',shows:'All rows checked and still. Stage line shows eight struck, polish current.',motion:'One soft shimmer, then still.'}},
  {grp:'Arrival'},
- {k:'reveal',t:'Ready: the reveal',ph:'reveal',n:{sub:'The emotional peak. Sanity\'s real outline replaces our visualization.',data:'<b>state</b> flips to <b>ready</b> (or <b>review</b> with an open issue). Then fetch the outline once.',shows:'The core fades out and the outline arrives row by row: purpose line, groups, core entries, peripheral entries. <code>related:</code> links draw once and fade to hover-only. Status: "ready · built by Sanity in 2:18".',motion:'Canvas fades 450ms; rows arrive top to bottom, 40ms apart, 420ms each. Reduced motion: straight swap.'}},
- {k:'outline',t:'Outline at rest',ph:'outline',n:{sub:'The finished knowledge base.',data:'Outline: <b>path</b>, <b>[core]/[peripheral]</b>, one-line summary, <b>topics</b>, <b>related</b>.',flagOutline:1,shows:'Tree grouped by path segment. Core entries lead each group with weight, a filled marker and their summary. Peripheral entries are lighter, hollow marker, summary on hover. Right edge shows the number of related entries.',motion:'None at rest.'}},
- {k:'hover',t:'Hovering an entry',ph:'outline',hover:'jev/primitives/choice',n:{sub:'Inspecting one entry.',data:'Entry\'s <b>related</b> and <b>topics</b>.',shows:'Row tints, topics appear, related entries get a ringed marker and arcs draw in the gutter between them. Keyboard focus does the same.',motion:'Arcs draw in 200ms.'}},
- {k:'forty',t:'40-entry outline',ph:'outline',n40:1,n:{sub:'The same 360px holding a large build.',data:'Same outline, 40 entries (sample).',shows:'Scrolls inside the map area. Core always shown; groups with more than three peripheral entries fold them into "+ N peripheral".',motion:'None.'}},
- {k:'query',t:'Answer lights up entries',ph:'outline',read:['api/openrouter','jev/primitives/noul'],n:{sub:'Query-time continuity, exact.',data:'The retrieval tool\'s entry paths, verbatim from the outline.',shows:'The question sits above the tree. Rows the agent read get the accent tint and a "read" label, scrolled into view. Related links between read entries draw.',motion:'Tint fades in as each read is reported; clears when the next question starts.'}},
- {k:'issue',t:'Ready with an open issue',ph:'outline',issue:1,n:{sub:'state: review.',data:'<b>state: review</b>, <b>openIssueCount</b>.',shows:'Status reads "ready · 1 issue to review". A plain line above the tree: "Sanity flagged 1 conflict between sources." Testing still works.',motion:'None.'}},
+ {k:'reveal',t:'Ready: the reveal',ph:'reveal',n:{sub:'The emotional peak. Sanity\'s real outline replaces our visualization.',data:'<b>state</b> flips to <b>ready</b> (or <b>review</b>). Then <b>kb.context.entries.list()</b> once: path, title, tldr (centrality, summary, excludes, neighbors). No MCP needed.',shows:'The core fades out and the outline arrives row by row: purpose line, tier headings, entries. Arcs draw only if any entry has <b>neighbors</b>; on typical three-source builds there are none, so none draw. Status: "ready · built by Sanity in 2:18".',motion:'Canvas fades 450ms; rows arrive top to bottom, 40ms apart, 420ms each. Reduced motion: straight swap.'}},
+ {k:'outline',t:'Outline at rest',ph:'outline',n:{sub:'The finished knowledge base, as a typical three-source build returns it: flat paths, three tiers.',data:'<b>title</b>, <b>tldr.centrality</b> (core / standard / peripheral), <b>tldr</b> summary. Paths are usually flat.',shows:'Grouped by tier, not by path. <b>Core to your purpose</b>: filled marker, 13px/600, summary shown. <b>Supporting</b> (standard): half marker (same look as "borderline, kept" chunks), 13px/500, summary shown. <b>Background</b> (peripheral): hollow marker, lighter, summary on hover. Empty tiers are left out. The purpose line explains what core means.',motion:'None at rest.'}},
+ {k:'hover',t:'Hovering an entry',ph:'outline',hover:'question_primitives',n:{sub:'Inspecting one entry.',data:'<b>tldr.excludes</b>: authored prose saying what this entry leaves to other entries.',shows:'Row tints and shows "Left to other entries: …" from excludes. Entry paths that appear verbatim in that text are shown as those entries\' titles in bold. No arcs, because neighbors are empty. Keyboard focus does the same.',motion:'None beyond the row tint.'}},
+ {k:'forty',t:'40-entry outline',ph:'outline',n40:1,n:{sub:'A large build where paths nest and some neighbors exist. The exception, not the norm.',data:'Same fields, 40 sample entries with slash paths and a few <b>neighbors</b>.',shows:'Still grouped by tier first. Inside a tier, slash paths get mono subheadings (<code>api/</code>). More than three background entries fold into "+ N background entries". Where neighbors exist, the row shows "↔ 1" and hover draws arcs. Scrolls inside the map area.',motion:'None.'}},
+ {k:'query',t:'Answer lights up entries',ph:'outline',read:['calling_jev','question_primitives'],n:{sub:'Query-time continuity, exact. The only outline state that still needs the MCP endpoint.',data:'The retrieval tool\'s entry paths, verbatim.',shows:'The question sits above the tree. Rows the agent read get the accent tint and a "read" label, and the first one scrolls into view. Arcs only if the read entries are neighbors.',motion:'Tint fades in as each read is reported; clears when the next question starts.'}},
+ {k:'issue',t:'Ready with an open issue',ph:'outline',issue:1,flag:'Hold this copy until the reviewable count is confirmed (see state 10). Write it against that count, not openIssueCount or the raw issue list.',n:{sub:'state: review.',data:'<b>state: review</b> plus the reviewable issue count (field to be confirmed).',shows:'Status reads "ready · 1 issue to review". A plain line above the tree: "Sanity flagged 1 conflict between sources." Testing still works.',motion:'None.'}},
  {grp:'Failure'},
  {k:'failed',t:'Failed at write',ph:'failed',si:7,n:{sub:'Sanity\'s build stopped.',data:'Stage status <b>failed</b>, or the build job ending without ready.',shows:'Everything freezes where it was. The stage line marks write as stopped. Status says where it stopped, with Try again. The core stays, because the synthesized material is still ours.',motion:'All motion stops.'},flag:'Check that Try again can re-run only Sanity\'s build (<code>sanity context build</code>) without re-running Jev and synthesis.'}
 ];
 const flat=S.filter(x=>x.k);
-let cur=0, width=490, nOut=10, view='outline', playing=null;
+let cur=0, width=490, nOut=10, view='outline', playing=null, calm=true;
 
 /* ---------- state list ---------- */
 const ul=$('#states'); let num=0;
@@ -331,7 +337,7 @@ function modeFor(st){
 function frame(now){
   const st=flat[cur]; const mode=modeFor(st), rm=reduced||$('#mSeg [data-m="reduced"]').getAttribute('aria-pressed')==='true';
   const tt=(now-t0)/1000, k=rm?1:0.12;
-  if(st.k==='organize'&&!rm){ const step=Math.floor(tt/1.5)%4; const perms=[[0,1,2,3,4,5],[1,0,2,3,5,4],[1,3,2,0,5,4],[4,3,1,0,5,2]]; order=perms[step]; } else if(!(st.ph==='stage'||st.ph==='failed')||st.si<5) order=[0,1,2,3,4,5]; else if(st.k!=='organize') order=[4,3,1,0,5,2];
+  if(st.k==='organize'&&!rm&&!calm){ const step=Math.floor(tt/1.5)%4; const perms=[[0,1,2,3,4,5],[1,0,2,3,5,4],[1,3,2,0,5,4],[4,3,1,0,5,2]]; order=perms[step]; } else if(!(st.ph==='stage'||st.ph==='failed')||st.si<5) order=[0,1,2,3,4,5]; else order=[4,3,1,0,5,2];
   chunks.forEach(c=>{ const p=lanePos(c); c.lx=p[0]; c.ly=p[1]; c.tx=p[0]; c.ty=p[1]; });
   if(mode!=='lane') coreTargets(mode);
   if(!chunks[0].init){ chunks.forEach(c=>{ c.x=c.lx; c.y=c.ly; c.init=1; }); }
@@ -365,13 +371,13 @@ function frame(now){
       const full=(W-g.pad-18)-x0; const target=full*(.45+((kk*37)%40)/100);
       let prog=1; if(st.k==='write'&&!rm) prog=Math.max(0,Math.min(1,(tt-kk*.35)/1.4));
       ctx.fillStyle=C['line-2']; rr(x0,b.y-2,Math.max(0,target*prog),4,2); ctx.fill();
-      if(st.si>=8||st.ph==='reveal'||st.ph==='outline'){ const sweepY=rm||st.si>8?1e9:TOP+30+((tt%1.6)/1.6)*170; if(b.y<sweepY){ ctx.strokeStyle=C.accent; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(W-g.pad-14,b.y); ctx.lineTo(W-g.pad-10,b.y+3); ctx.lineTo(W-g.pad-4,b.y-4); ctx.stroke(); } }
+      if(st.si>=8||st.ph==='reveal'||st.ph==='outline'){ const sweepY=rm||calm||st.si>8?1e9:TOP+30+((tt%1.6)/1.6)*170; if(b.y<sweepY){ ctx.strokeStyle=C.accent; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(W-g.pad-14,b.y); ctx.lineTo(W-g.pad-10,b.y+3); ctx.lineTo(W-g.pad-4,b.y-4); ctx.stroke(); } }
       if(st.conflict&&kk===3){ ctx.strokeStyle=C.ink; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(b.x-10,b.y,5,0,7); ctx.stroke(); ctx.fillStyle=C.ink; ctx.font='700 8px '+sans; ctx.textAlign='center'; ctx.fillText('!',b.x-10,b.y+3); }
     }
-    if(st.k==='review'&&!rm){ const y=TOP+30+((tt%1.6)/1.6)*170; ctx.strokeStyle=C.accent; ctx.globalAlpha=.35; ctx.beginPath(); ctx.moveTo(g.rx,y); ctx.lineTo(W-g.pad,y); ctx.stroke(); ctx.globalAlpha=1; }
+    if(st.k==='review'&&!rm&&!calm){ const y=TOP+30+((tt%1.6)/1.6)*170; ctx.strokeStyle=C.accent; ctx.globalAlpha=.35; ctx.beginPath(); ctx.moveTo(g.rx,y); ctx.lineTo(W-g.pad,y); ctx.stroke(); ctx.globalAlpha=1; }
   }
   // chunks
-  const scanX=(st.k==='map'&&!rm)?g.rx+((tt%2.2)/2.2)*(g.rw+20):-1;
+  const scanX=(st.k==='map'&&!rm&&!calm)?g.rx+((tt%2.2)/2.2)*(g.rw+20):-1;
   const dim=st.k==='queued';
   chunks.forEach(c=>{ c.x+=(c.tx-c.x)*k; c.y+=(c.ty-c.y)*k; const s=g.sq, x=c.x-s/2, y=c.y-s/2;
     ctx.globalAlpha=(dim&&c.dec!=='drop')?.45:1; rr(x,y,s,s,2);
@@ -398,34 +404,34 @@ function wrap(t,x,y,max,lh,lines){ const words=t.split(' '); let line='', n=0; f
 function ell(t,max){ if(ctx.measureText(t).width<=max) return t; while(t.length>1&&ctx.measureText(t+'…').width>max) t=t.slice(0,-1); return t+'…'; }
 
 /* ---------- outline (DOM) ---------- */
+const TIERS=[['core','Core to your purpose'],['standard','Supporting'],['peripheral','Background']];
+let titleOf={};
+function exHTML(text){ let h=esc(text); Object.keys(titleOf).sort((a,b)=>b.length-a.length).forEach(p=>{ h=h.replace(new RegExp('\\b'+p.replace(/[/]/g,'\\/')+'\\b','g'),'<b>'+esc(titleOf[p])+'</b>'); }); return h; }
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function buildTree(list){
-  const tree=$('#tree'); tree.innerHTML='';
-  const groups=new Map();
-  list.forEach(e=>{ const parts=e[0].split('/'); const g=parts[0]; const sub=parts.length>2?parts.slice(1,-1).join('/'):''; if(!groups.has(g)) groups.set(g,new Map()); const gm=groups.get(g); if(!gm.has(sub)) gm.set(sub,[]); gm.get(sub).push(e); });
+  const tree=$('#tree'); tree.innerHTML=''; titleOf={}; list.forEach(e=>titleOf[e[0]]=e[1]);
   let i=0;
-  const row=(e,parent)=>{ const b=document.createElement('button'); b.type='button'; b.className='entry '+(e[1]==='core'?'core':'peri'); b.dataset.path=e[0]; b.style.animationDelay=(i++*40)+'ms';
-    const leaf=e[0].split('/').pop();
+  const row=(e,parent)=>{ const b=document.createElement('button'); b.type='button'; b.className='entry '+(e[2]==='core'?'core':e[2]==='standard'?'std':'peri'); b.dataset.path=e[0]; b.style.animationDelay=(i++*40)+'ms';
     b.innerHTML='<span class="mk"></span><span class="en"></span><span class="rel"></span><span class="sm"></span><span class="tp"></span>';
-    b.querySelector('.en').textContent=humanize(leaf); b.title=e[0];
-    b.querySelector('.rel').textContent=e[4].length?'↔ '+e[4].length:'';
-    b.querySelector('.sm').textContent=e[2];
-    b.querySelector('.tp').textContent=e[3].length?'topics: '+e[3].join(', ')+(e[4].length?' · related: '+e[4].join(', '):''):(e[4].length?'related: '+e[4].join(', '):'');
+    b.querySelector('.en').textContent=e[1]; b.title=e[0];
+    b.querySelector('.rel').textContent=e[5].length?'↔ '+e[5].length:'';
+    b.querySelector('.sm').textContent=e[3];
+    const tp=b.querySelector('.tp'); if(e[4]) tp.innerHTML='Left to other entries: '+exHTML(e[4]); else tp.textContent='';
     b.addEventListener('mouseenter',()=>hoverOn(e[0])); b.addEventListener('mouseleave',()=>hoverOn(null));
     b.addEventListener('focus',()=>hoverOn(e[0])); b.addEventListener('blur',()=>hoverOn(null));
     parent.appendChild(b); };
-  for(const [g,subs] of groups){
-    const gd=document.createElement('div'); gd.className='ogroup'; const gh=document.createElement('div'); gh.className='gh'; gh.textContent=g+'/'; gh.style.animationDelay=(i++*40)+'ms'; gd.appendChild(gh);
-    for(const [sub,es] of subs){
-      let host=gd; if(sub){ host=document.createElement('div'); host.className='osub'; const sh=document.createElement('div'); sh.className='gh'; sh.textContent=sub+'/'; sh.style.animationDelay=(i++*40)+'ms'; host.appendChild(sh); gd.appendChild(host); }
-      const core=es.filter(e=>e[1]==='core'), peri=es.filter(e=>e[1]!=='core');
-      core.forEach(e=>row(e,host));
-      if(peri.length>3){ peri.slice(0,0).forEach(e=>row(e,host)); const m=document.createElement('button'); m.type='button'; m.className='more'; m.textContent='+ '+peri.length+' peripheral'; m.style.animationDelay=(i++*40)+'ms'; m.onclick=()=>{ m.remove(); peri.forEach(e=>row(e,host)); }; host.appendChild(m); }
-      else peri.forEach(e=>row(e,host));
-    }
+  TIERS.forEach(([tk,label])=>{
+    const es=list.filter(e=>e[2]===tk); if(!es.length) return;
+    const gd=document.createElement('div'); gd.className='ogroup';
+    const th=document.createElement('div'); th.className='tierh gh'; th.innerHTML=esc(label)+' <span>'+es.length+'</span>'; th.style.animationDelay=(i++*40)+'ms'; gd.appendChild(th);
+    const flat=es.filter(e=>!e[0].includes('/')), nested=new Map();
+    es.filter(e=>e[0].includes('/')).forEach(e=>{ const g=e[0].split('/')[0]; if(!nested.has(g)) nested.set(g,[]); nested.get(g).push(e); });
+    const emit=(arr,host)=>{ if(tk==='peripheral'&&arr.length>3){ const m=document.createElement('button'); m.type='button'; m.className='more'; m.textContent='+ '+arr.length+' background entries'; m.style.animationDelay=(i++*40)+'ms'; m.onclick=()=>{ m.remove(); arr.forEach(e=>row(e,host)); }; host.appendChild(m); } else arr.forEach(e=>row(e,host)); };
+    emit(flat,gd);
+    for(const [g,arr] of nested){ const sub=document.createElement('div'); sub.className='osub'; const sh=document.createElement('div'); sh.className='gh'; sh.textContent=g+'/'; sh.style.animationDelay=(i++*40)+'ms'; sub.appendChild(sh); emit(arr,sub); gd.appendChild(sub); }
     tree.appendChild(gd);
-  }
-  const nCore=list.filter(e=>e[1]==='core').length;
-  $('#oCount').innerHTML='Outline · <b>'+list.length+'</b> entries · '+nCore+' core';
+  });
+  $('#oCount').innerHTML='Outline · <b>'+list.length+'</b> entries';
 }
 let relMap={};
 function drawArcs(paths,strong){
@@ -452,6 +458,7 @@ function stripHTML(st){
 const clocks=['','0:42','0:58','1:07','1:19','1:31','1:44','1:52','2:03','2:11','2:15'];
 function show(i){
   cur=i; const st=flat[i]; t0=performance.now();
+  const list=st.n40?out40():OUT10; relMap={}; list.forEach(e=>relMap[e[0]]=e[5]);
   flat.forEach((x,j)=>x.btn.setAttribute('aria-current',j===i));
   const stage=$('#stage'), below=$('#below'), stl=$('#st');
   const outlineMode=st.ph==='reveal'||st.ph==='outline';
@@ -468,9 +475,8 @@ function show(i){
   else if(st.ph==='stage'){
     below.innerHTML=stripHTML(st)+'<div class="statusline">'+(st.si===0?'Queued at Sanity · waiting for a build slot · 0:42 elapsed':'Sanity · '+STAGES[st.si][0]+' · '+STAGES[st.si][1].toLowerCase()+' · '+clocks[st.si]+' elapsed')+'</div><div class="frameline">Jev decided in <b>0.5s</b>. Opus wrote in <b>38s</b>. Sanity is building the index now; this is the slow part.</div>'; }
   else if(st.ph==='failed'){ below.innerHTML=stripHTML(st)+'<div class="failrow"><span class="statusline">Sanity\'s build stopped at write after 1:52.</span><button class="btn sm primary" type="button">Try again</button></div>'; }
-  else { below.innerHTML=view==='built'?'<div class="legend"><span><i class="lg k"></i>kept</span><span><i class="lg u"></i>borderline, kept</span><span><i class="lg d"></i>dropped</span></div>':'<div class="legend"><span><i class="lg c"></i>core to your purpose</span><span><i class="lg p"></i>peripheral</span><span>↔ related entries</span></div>'; }
+  else { below.innerHTML=view==='built'?'<div class="legend"><span><i class="lg k"></i>kept</span><span><i class="lg u"></i>borderline, kept</span><span><i class="lg d"></i>dropped</span></div>':'<div class="legend"><span><i class="lg c"></i>core to your purpose</span><span><i class="lg u"></i>supporting</span><span><i class="lg p"></i>background</span>'+(Object.values(relMap).some(v=>v.length)?'<span>↔ related entries</span>':'')+'</div>'; }
   // outline
-  const list=st.n40?out40():OUT10; relMap={}; list.forEach(e=>relMap[e[0]]=e[4]);
   if(outlineMode){ buildTree(list); }
   stage.classList.toggle('outlined',outlineMode&&view==='outline');
   stage.classList.remove('revealing'); if(st.ph==='reveal'){ void stage.offsetWidth; stage.classList.add('revealing'); }
@@ -482,7 +488,7 @@ function show(i){
     if(st.ph==='reveal'){ const all=Object.keys(relMap).filter(p=>relMap[p].length); drawArcs(all,false); setTimeout(()=>{ if(flat[cur]===st) drawArcs([],false); },1600); }
     if(st.read){ const el=document.querySelector('.entry.read'); if(el) $('#oscroll').scrollTop=Math.max(0,el.offsetTop-60); } else $('#oscroll').scrollTop=0; });
   // notes
-  const n=st.n; $('#notes').innerHTML='<h2></h2><p class="sub"></p><dl><div><dt>Data</dt><dd>'+n.data+'</dd></div><div><dt>What it shows</dt><dd>'+n.shows+'</dd></div><div><dt>Motion</dt><dd>'+n.motion+'</dd></div></dl>'+(st.flag?'<div class="flag"><b>To check:</b> '+st.flag+'</div>':'')+(n.flagOutline?'<div class="flag"><b>To check:</b> the outline gives paths, not titles. The mockup shows the last path segment, humanized ("import-routes" becomes "Import routes"), so casing like "OpenRouter" is lost. Use a title field if the API has one.</div>':'');
+  const n=st.n; $('#notes').innerHTML='<h2></h2><p class="sub"></p><dl><div><dt>Data</dt><dd>'+n.data+'</dd></div><div><dt>What it shows</dt><dd>'+n.shows+'</dd></div><div><dt>Motion</dt><dd>'+n.motion+'</dd></div></dl>'+(st.flag?'<div class="flag"><b>Open:</b> '+st.flag+'</div>':'');
   $('#notes h2').textContent=st.t; $('#notes .sub').textContent=n.sub;
 }
 $('#viewSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; view=b.dataset.v; $('#viewSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); show(cur); });
@@ -491,7 +497,7 @@ $('#viewSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); 
 function seg(id,fn){ $(id).addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; $(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); fn(b); }); }
 seg('#wSeg',b=>{ width=+b.dataset.w; $('#frame').style.width=width+'px'; setTimeout(()=>{ resize(); show(cur); },320); });
 seg('#nSeg',b=>{ nOut=+b.dataset.n; const i=flat.findIndex(x=>x.k===(nOut===40?'forty':'outline')); show(i); });
-seg('#mSeg',b=>{ reduced=b.dataset.m==='reduced'; $('#frame').classList.toggle('rm',reduced); show(cur); });
+seg('#mSeg',b=>{ reduced=b.dataset.m==='reduced'; calm=b.dataset.m!=='full'; $('#frame').classList.toggle('rm',reduced); show(cur); });
 function stop(){ if(playing){ clearTimeout(playing); playing=null; $('#play').textContent='Play sequence'; } }
 $('#play').addEventListener('click',()=>{ if(playing){ stop(); return; } $('#play').textContent='Stop'; let i=0; const d=k=>k==='reveal'?3200:k==='synth'?2600:k==='organize'?4200:2600;
   const step=()=>{ show(i); const k=flat[i].k; if(k==='outline'){ stop(); return; } playing=setTimeout(()=>{ i++; step(); },d(k)); }; step(); });

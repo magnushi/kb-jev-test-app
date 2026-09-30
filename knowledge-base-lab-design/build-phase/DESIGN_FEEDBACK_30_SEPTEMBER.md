@@ -203,3 +203,66 @@ Worth saying explicitly, because the list above is all objections:
 
 Nothing here changes the shape of the design. It's the same two ideas — make the wait
 legible, make the reveal worth waiting for — fitted to what the API actually returns.
+
+---
+
+# Correction, later the same day
+
+## §5 was wrong: `openIssueCount` is the right field
+
+I reported that `openIssueCount` (0) disagreed with `issues.list()` (4). It doesn't. I
+read the count moments after the build completed, before it had populated. Re-read now:
+
+```
+all=4  open=4
+  open  conflict  critical  algorithms
+  open  conflict  critical  *
+  open  conflict  critical  *
+  open  conflict  critical  *
+
+reviewable (open, non-gap): 4
+openIssueCount on record:   4
+state: review   isBuilding: false
+```
+
+They agree. **Use `openIssueCount`.** Apologies — that sent you to put the copy in states
+10 and 17 on hold for no reason. Take it off hold.
+
+One caveat worth keeping. The issue kinds are:
+
+```ts
+kind: 'conflict' | 'gap' | 'update_required'
+    | 'add_entry' | 'remove_entry' | 'split_entry' | 'merge_entry'
+severity: 'critical' | 'suggestion'
+```
+
+Docs say coverage gaps are recorded but not surfaced for review, and `openIssueCount`
+matched the non-gap count exactly here, so it appears to already be the surfaced count.
+Our build produced only conflicts, so a build containing gaps hasn't been observed. If
+the two ever diverge, filter to the reviewable kinds — but write the copy against
+`openIssueCount`.
+
+**A consequence for the copy:** all four issues came back `severity: 'critical'`, and the
+docs say critical issues "affect a fact an agent is likely to state". Severity is
+available, and "1 critical conflict" says more than "1 conflict".
+
+## State 17 is live right now
+
+`kbt432byCXWQ` is sitting in `state: review` with 4 open critical conflicts. So state 17
+is not hypothetical — it is the state our only built knowledge base is actually in, and
+it can be built and checked against real data immediately.
+
+Worth noting for the design: **`review`, not `ready`, may be the common outcome.** Three
+sources on one topic disagree often. The knowledge base is fully testable in that state,
+so nothing is blocked, but "ready" may be the rarer of the two labels.
+
+## Still open, unchanged
+
+- Whether `openIssueCount` moves *during* the `review` stage, or only lands at the end.
+  Needs a build to watch. Until then, state 10's in-build conflict line stays speculative
+  and state 17's is safe.
+- Whether `neighbors` fills in on larger knowledge bases. For the Sanity Context team.
+- **Try again** re-running only `kb.context.build()`. Deliberately not tested yet:
+  re-running it on `kbt432byCXWQ` would rebuild the entries I'm using as the fixture for
+  states 12–15. I'll test it on a throwaway knowledge base instead.
+- The stage captions. For the Sanity Context team.
