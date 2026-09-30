@@ -230,6 +230,7 @@ export function Lab({initialCount}: {initialCount: number}) {
 
   const displayName = name || 'New'
   const building = map.phase !== 'idle' && map.phase !== 'ready' && map.phase !== 'failed'
+  const buildPending = building ? statusLine(map) : undefined
 
   return (
     <div className="page">
@@ -245,7 +246,7 @@ export function Lab({initialCount}: {initialCount: number}) {
           phase={map.phase}
           maker={maker}
           setMaker={setMaker}
-          pending={pending ?? undefined}
+          pending={pending ?? buildPending}
         />
 
         <section className="panel" aria-label="Knowledge map">

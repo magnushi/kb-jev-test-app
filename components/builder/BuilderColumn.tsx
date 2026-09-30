@@ -48,6 +48,15 @@ export function BuilderColumn({
   const hasProposal = thread.some((m) => m.kind === 'proposal' && !m.locked)
   const savedMaker = maker.name.trim().length > 0 && !editingMaker
 
+  // The composer is inert while the builder is interpreting a request or a build
+  // is running, and says which it is rather than just refusing input.
+  const locked = busy || building
+  const composerPlaceholder = busy
+    ? 'Reading your request…'
+    : building
+      ? 'Build in progress. Wait for it to finish.'
+      : 'Describe a knowledge base, or paste URLs'
+
   // Keep the newest message in view. Without this, appended messages land below
   // the fold and the opening prompt stays on screen, which reads as a repeat ask.
   useEffect(() => {
@@ -220,14 +229,15 @@ export function BuilderColumn({
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Describe a knowledge base, or paste URLs"
+          placeholder={composerPlaceholder}
           aria-label="Describe a knowledge base, or paste URLs"
+          disabled={locked}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && draft.trim() && !busy) send()
+            if (e.key === 'Enter' && draft.trim() && !locked) send()
           }}
         />
-        <button className="btn" onClick={send} disabled={busy || !draft.trim()}>
-          Send
+        <button className="btn" onClick={send} disabled={locked || !draft.trim()}>
+          {busy ? 'Working' : 'Send'}
         </button>
       </div>
     </section>

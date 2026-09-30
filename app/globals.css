@@ -204,3 +204,5 @@ details.sources summary { color: var(--muted); cursor: pointer; }
 .ellipsis i:nth-child(3) { animation-delay: .3s; }
 @keyframes bounce { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ellipsis i { animation: none; opacity: .6; } }
+
+.composer input:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
