@@ -200,11 +200,6 @@ export function KnowledgeMap({state, reducedMotion}: {state: MapState; reducedMo
         ctx.fillText('Sections appear here after Jev and synthesis run.', rightX, LANE_HEADER + 20)
         ctx.fillText('Kept chunks are synthesized into sections next.', rightX, LANE_HEADER + 38)
       } else {
-        ctx.font = `400 11px ${token('--sans')}`
-        ctx.fillStyle = colors.muted
-        const chunksLabel = 'chunks'
-        ctx.fillText(chunksLabel, width - ctx.measureText(chunksLabel).width, LANE_HEADER + 8)
-
         state.sections.slice(0, 12).forEach((section, index) => {
           const y = LANE_HEADER + 24 + index * 20
           if (section.retrieved) {
@@ -215,11 +210,8 @@ export function KnowledgeMap({state, reducedMotion}: {state: MapState; reducedMo
           ctx.fillRect(rightX, y - 7, 8, 8)
           ctx.fillStyle = hoveredSection === index ? colors.ink : colors.ink2
           ctx.font = `500 12px ${token('--sans')}`
-          ctx.fillText(truncate(ctx, section.title, rightWidth - 52), rightX + 14, y)
-          ctx.fillStyle = colors.muted
-          ctx.font = `400 11px ${token('--mono')}`
-          const count = String(section.sourceChunkIds.length)
-          ctx.fillText(count, width - ctx.measureText(count).width, y)
+          // No per-section chunk count: we have no real provenance for it.
+          ctx.fillText(truncate(ctx, section.title, rightWidth - 16), rightX + 14, y)
         })
 
         const footerY = LANE_HEADER + 24 + Math.min(state.sections.length, 12) * 20 + 10

@@ -168,8 +168,12 @@ export function statusLine(state: MapState): string {
       const dropped = chunks.filter((c) => c.state === 'drop').length
       return `Jev · ${decided.length}/${chunks.length} evaluated · ${kept} kept · ${dropped} dropped`
     }
-    case 'synthesizing':
-      return `Synthesizing ${state.sections.length} section${state.sections.length === 1 ? '' : 's'} from retained material`
+    case 'synthesizing': {
+      const kept = chunks.filter((c) => c.state === 'keep' || c.state === 'borderline').length
+      return state.sections.length > 0
+        ? `Writing · ${state.sections.length} section${state.sections.length === 1 ? '' : 's'} so far`
+        : `Writing from ${kept} retained chunk${kept === 1 ? '' : 's'}`
+    }
     case 'creating':
       return 'Creating the knowledge base in Sanity and importing'
     case 'building':

@@ -153,11 +153,15 @@ export async function runBuild(buildId: string): Promise<void> {
     metrics.synthesisOutputTokens = usage.outputTokens
     metrics.llmCostUsd = usage.costUsd
 
+    // No per-section provenance: synthesis is one call over all retained
+    // material, so we cannot say which chunks produced which section. Emitting
+    // every chunk id for every section would be a fabricated number.
+    // Real provenance comes from the Sanity outline's citations, post-build.
     for (const heading of markdown.split('\n').filter((line) => line.startsWith('## '))) {
       await emit({
         type: 'synthesis.section',
         title: heading.slice(3).trim(),
-        sourceChunkIds: retained.map((c) => c.id),
+        sourceChunkIds: [],
       })
     }
     await emit({

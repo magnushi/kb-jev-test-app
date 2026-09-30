@@ -1,5 +1,5 @@
 import {NextResponse, type NextRequest} from 'next/server'
-import {askKnowledgeBase} from '../../../lib/agents/test-agent.ts'
+import {AgentUnavailableError, askKnowledgeBase} from '../../../lib/agents/test-agent.ts'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -21,9 +21,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('[api/chat]', error)
-    return NextResponse.json(
-      {error: error instanceof Error ? error.message : 'The agent failed.'},
-      {status: 500},
-    )
+    // Only our own messages reach the browser. A provider error envelope never does.
+    if (error instanceof AgentUnavailableError) {
+      return NextResponse.json({error: error.message}, {status: 503})
+    }
+    return NextResponse.json({error: 'The agent could not answer that. Try again.'}, {status: 500})
   }
 }

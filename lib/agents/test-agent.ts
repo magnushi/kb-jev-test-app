@@ -17,13 +17,22 @@ export type AgentAnswer = {
  * Retrieval happens through the knowledge base's own tools. The synthesized
  * Markdown is deliberately NOT stuffed into the system prompt (design brief §3.4).
  */
+/** Raised for conditions the user can act on. Anything else stays in the logs. */
+export class AgentUnavailableError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'AgentUnavailableError'
+  }
+}
+
 export async function askKnowledgeBase(input: {
   knowledgeBaseId: string
   question: string
 }): Promise<AgentAnswer> {
   if (!config.sanity.mcpEndpoint) {
-    throw new Error(
-      'No Context MCP endpoint configured. Create one in the Context app and set SANITY_MCP_ENDPOINT.',
+    throw new AgentUnavailableError(
+      'Retrieval is not configured yet: this deployment has no Sanity Context MCP endpoint. ' +
+        'The knowledge base itself was built and is intact.',
     )
   }
 
@@ -32,27 +41,43 @@ export async function askKnowledgeBase(input: {
     `/mcp/${config.sanity.mcpEndpoint}` +
     `?mode=knowledge_base&knowledgeBases=${encodeURIComponent(input.knowledgeBaseId)}`
 
-  const message = await client.beta.messages.create({
-    model: config.llm.synthesisModel,
-    max_tokens: 4096,
-    thinking: {type: 'adaptive'},
-    betas: ['mcp-client-2025-11-20'],
-    mcp_servers: [
-      {
-        type: 'url',
-        url,
-        name: 'sanity_context',
-        authorization_token: config.sanity.organizationToken,
-      },
-    ],
-    tools: [{type: 'mcp_toolset', mcp_server_name: 'sanity_context'}],
-    system:
-      'You answer strictly from the Sanity Knowledge Base available through your tools. ' +
-      'Always retrieve before answering; never answer from your own knowledge. ' +
-      'If the knowledge base does not cover the question, say so plainly and list what it ' +
-      'does cover. Be concise and concrete. Do not mention tool names.',
-    messages: [{role: 'user', content: input.question}],
-  })
+  let message: Anthropic.Beta.BetaMessage
+  try {
+    message = await client.beta.messages.create({
+      model: config.llm.synthesisModel,
+      max_tokens: 4096,
+      thinking: {type: 'adaptive'},
+      betas: ['mcp-client-2025-11-20'],
+      mcp_servers: [
+        {
+          type: 'url',
+          url,
+          name: 'sanity_context',
+          authorization_token: config.sanity.organizationToken,
+        },
+      ],
+      tools: [{type: 'mcp_toolset', mcp_server_name: 'sanity_context'}],
+      system:
+        'You answer strictly from the Sanity Knowledge Base available through your tools. ' +
+        'Always retrieve before answering; never answer from your own knowledge. ' +
+        'If the knowledge base does not cover the question, say so plainly and list what it ' +
+        'does cover. Be concise and concrete. Do not mention tool names.',
+      messages: [{role: 'user', content: input.question}],
+    })
+  } catch (error) {
+    // The MCP connector reports an unreachable or misconfigured endpoint as a
+    // 400 on our request. Surface that as something actionable rather than
+    // pasting the provider's error envelope into the chat.
+    const raw = error instanceof Error ? error.message : String(error)
+    console.error('[test-agent] MCP call failed', raw)
+    if (raw.includes('mcp_servers') || raw.includes('MCP server')) {
+      throw new AgentUnavailableError(
+        `Could not reach the Sanity Context MCP endpoint "${config.sanity.mcpEndpoint}". ` +
+          'Check that it exists in the Context app and serves this knowledge base.',
+      )
+    }
+    throw new AgentUnavailableError('The agent could not complete that request. Try again.')
+  }
 
   const answer = message.content
     .filter((block): block is Anthropic.TextBlock => block.type === 'text')
