@@ -14,8 +14,9 @@
 - [x] **Multi-source builds** — the slice now takes N URLs, which is what makes the
       funnel visible: one source has nothing to drop.
 - [x] **Synthesis no longer inflates** — 4,885 retained in, 4,294 out.
-- [ ] Query the built knowledge base through Context MCP (Stage G) — **blocked** on
-      creating an MCP endpoint in the Context app (manual, Dashboard-only).
+- [x] Query the built knowledge base through Context MCP (Stage G). The endpoint was
+      created over an undocumented `POST /mcp` route; the agent retrieved 2 entries and
+      answered from them.
 - [ ] Output budget proportional to retained input, rather than a flat cap.
 
 ## Phase 2 — UI

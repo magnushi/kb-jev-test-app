@@ -274,7 +274,39 @@ Caveats that matter for us:
   also works — our existing token qualifies. A project token is rejected with
   `403 contextGrantRequired`.
 
-**Not yet verified live** — blocked on creating the endpoint.
+### Creating an endpoint programmatically — undocumented, but it works
+
+The docs say endpoints are Dashboard-only. `@sanity/client` exposes `mcpEndpoints` as
+**read-only** (`list`, `get`), and the CLI has no `context mcp` command. But the route
+exists — it surfaced in a Sanity CI failure as `POST /mcp` with
+`mcpEndpointManageAccessDenied`:
+
+```
+POST https://api.sanity.io/v2026-08-25/context/organizations/:orgId/mcp
+Authorization: Bearer <token with sanity.knowledge-base.create>
+{"title": "KB Lab", "name": "kb-lab",
+ "sources": [{"type": "knowledge-base", "id": "kbXXXX"}]}
+→ 201 {"id": "mcpy4c6z03c", "name": "kb-lab", ...}
+```
+
+Verified: created `kb-lab` this way. Undocumented and absent from both SDK and CLI, so
+treat it as liable to change and keep it out of the request path — an endpoint is created
+once, by hand or by a setup script.
+
+### Verified live
+
+`tools/list` on a knowledge-base-mode endpoint returns **three** tools, not the two the
+docs list:
+
+```
+initial_context · knowledge_base_read · knowledge_base_search
+```
+
+`knowledge_base_search` is undocumented. Worth investigating: searching entry bodies was
+the biggest gap in an internal tester's report.
+
+End to end, through the app's own `/api/chat`: the agent retrieved 2 entries and answered
+from them. Stage G confirmed.
 
 ---
 
