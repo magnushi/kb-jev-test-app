@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- The wordmark's 3x3 dot mark. Same 3:2 dot-to-gap ratio as .dotmark in
+       globals.css, so the tab and the header read as one thing. -->
+  <style>
+    circle { fill: #556bfc; }
+    @media (prefers-color-scheme: dark) {
+      circle { fill: #7595ff; }
+    }
+  </style>
+  <circle cx="6"  cy="6"  r="3"/>
+  <circle cx="16" cy="6"  r="3"/>
+  <circle cx="26" cy="6"  r="3"/>
+  <circle cx="6"  cy="16" r="3"/>
+  <circle cx="16" cy="16" r="3"/>
+  <circle cx="26" cy="16" r="3"/>
+  <circle cx="6"  cy="26" r="3"/>
+  <circle cx="16" cy="26" r="3"/>
+  <circle cx="26" cy="26" r="3"/>
+</svg>
