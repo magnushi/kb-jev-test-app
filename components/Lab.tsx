@@ -7,6 +7,8 @@ import {KnowledgeMap} from './knowledge-map/KnowledgeMap.tsx'
 import {TokenStrip} from './knowledge-map/TokenStrip.tsx'
 import {Legend} from './knowledge-map/Legend.tsx'
 import {TestColumn, type Turn} from './test-chat/TestColumn.tsx'
+import {Outline} from './knowledge-map/Outline.tsx'
+import {StageLine, STAGE_CAPTIONS, elapsed} from './knowledge-map/StageLine.tsx'
 import {applyEvent, emptyMapState, statusLine, type MapState} from './knowledge-map/types.ts'
 import type {BuildEvent} from '../lib/db/types.ts'
 
@@ -34,8 +36,47 @@ export function Lab({initialCount}: {initialCount: number}) {
   const [pending, setPending] = useState<string | null>(null)
   const proposalId = useRef(0)
   const lastSeq = useRef(-1)
+  const [view, setView] = useState<'outline' | 'canvas'>('outline')
+  const [now, setNow] = useState(() => Date.now())
 
   const reducedMotion = useReducedMotion()
+
+  const isWaitingOnSanity = map.phase === 'queued' || map.phase === 'building'
+  useEffect(() => {
+    if (!isWaitingOnSanity) return
+    const interval = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(interval)
+  }, [isWaitingOnSanity])
+
+  // Fetch Sanity's outline once, when the build lands.
+  useEffect(() => {
+    if (map.phase !== 'ready' || !map.knowledgeBaseId || map.outline) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch(`/api/knowledge-bases/${map.knowledgeBaseId}/outline`)
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          outline?: MapState['outline']
+          outcome?: 'ready' | 'review'
+          openIssueCount?: number
+        }
+        if (cancelled || !data.outline) return
+        setMap((current) => ({
+          ...current,
+          outline: data.outline,
+          outcome: data.outcome,
+          openIssueCount: data.openIssueCount,
+        }))
+        setView('outline')
+      } catch {
+        /* the map still works without it */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [map.phase, map.knowledgeBaseId, map.outline])
 
   // Maker details persist per browser, not per account (design brief §5.2).
   useEffect(() => {
@@ -205,7 +246,11 @@ export function Lab({initialCount}: {initialCount: number}) {
           answer?: string
           retrieved?: number
           sources?: {title: string; domain?: string}[]
+          readPaths?: string[]
           error?: string
+        }
+        if (data.readPaths?.length) {
+          setMap((current) => ({...current, readPaths: data.readPaths, readQuestion: question}))
         }
         setTurns((t) => {
           const next = [...t]
@@ -289,15 +334,89 @@ export function Lab({initialCount}: {initialCount: number}) {
                 aria-label="Knowledge base name"
               />
               <span>Knowledge Base</span>
-              <span className="kb-status">{statusFor(map.phase)}</span>
+              <span className={`kb-status${isWaitingOnSanity ? ' kb-status-live' : ''}`}>
+                {statusFor(map.phase)}
+                {isWaitingOnSanity && map.buildStartedAt
+                  ? ` · ${elapsed(map.buildStartedAt, now)}`
+                  : ''}
+                {map.phase === 'ready' && map.outcome === 'review' && map.openIssueCount
+                  ? ` · ${map.openIssueCount} ${map.openIssueCount === 1 ? 'issue' : 'issues'} to review`
+                  : ''}
+              </span>
             </h1>
 
-            <KnowledgeMap state={map} reducedMotion={reducedMotion} />
+            {map.outline && view === 'outline' ? (
+              <div className="map-area outline-area">
+                <div className="outline-toggle">
+                  <span className="seg">
+                    <button aria-pressed onClick={() => setView('outline')}>Outline</button>
+                    <button aria-pressed={false} onClick={() => setView('canvas')}>
+                      How it was built
+                    </button>
+                  </span>
+                </div>
+                <Outline
+                  entries={map.outline}
+                  purpose={intent?.purpose ?? ''}
+                  readPaths={map.readPaths}
+                  question={map.readQuestion}
+                  openIssueCount={map.openIssueCount}
+                  outcome={map.outcome}
+                />
+              </div>
+            ) : (
+              <>
+                <KnowledgeMap state={map} reducedMotion={reducedMotion} />
+                <div className="map-status">
+                  <span className="map-status-text">{statusLine(map)}</span>
+                  <Legend />
+                </div>
+                {map.outline && (
+                  <div className="outline-toggle inline">
+                    <span className="seg">
+                      <button aria-pressed={false} onClick={() => setView('outline')}>
+                        Outline
+                      </button>
+                      <button aria-pressed onClick={() => setView('canvas')}>
+                        How it was built
+                      </button>
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
 
-            <div className="map-status">
-              <span className="map-status-text">{statusLine(map)}</span>
-              <Legend />
-            </div>
+            {isWaitingOnSanity && (
+              <>
+                <StageLine
+                  current={map.buildStage}
+                  done={map.stagesDone}
+                  reducedMotion={reducedMotion}
+                />
+                <p className="core-caption">
+                  {STAGE_CAPTIONS[map.buildStage ?? 'queued']}{' '}
+                  <span>Motion shows the stage. Entries appear when Sanity finishes.</span>
+                </p>
+                <p className="framing">
+                  {map.jevLatencyMs !== undefined && (
+                    <>Jev decided in <strong>{(map.jevLatencyMs / 1000).toFixed(1)}s</strong>. </>
+                  )}
+                  {map.synthesisMs !== undefined && (
+                    <>Opus wrote in <strong>{Math.round(map.synthesisMs / 1000)}s</strong>. </>
+                  )}
+                  Sanity is building the index now; this is the slow part.
+                </p>
+              </>
+            )}
+
+            {map.phase === 'failed' && map.buildStage && (
+              <StageLine
+                current={undefined}
+                done={map.stagesDone}
+                failedAt={map.buildStage}
+                reducedMotion={reducedMotion}
+              />
+            )}
 
             <TokenStrip state={map} />
           </div>
@@ -329,6 +448,8 @@ function statusFor(phase: MapState['phase']): string {
       return 'synthesizing'
     case 'creating':
       return 'creating in Sanity'
+    case 'queued':
+      return 'queued'
     case 'building':
       return 'building'
     case 'ready':

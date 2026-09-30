@@ -19,6 +19,6 @@ export async function GET(request: NextRequest, context: {params: Promise<{id: s
     knowledgeBaseId: record.sanityKnowledgeBaseId,
     title: record.title,
     error: record.error,
-    events: events.map((e) => ({seq: e.seq, event: e.event})),
+    events: events.map((e) => ({seq: e.seq, at: e.at, event: e.event})),
   })
 }

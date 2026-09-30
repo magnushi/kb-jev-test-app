@@ -41,7 +41,24 @@ export interface KnowledgeBaseProvider {
   importMarkdown(input: {knowledgeBaseId: string; title: string; markdown: string}): Promise<{jobId: string}>
   build(input: {knowledgeBaseId: string}): Promise<{jobId: string}>
   status(input: {knowledgeBaseId: string}): Promise<KnowledgeBaseStatus>
+  /** Sanity's outline, once a build has landed. Needs no MCP endpoint. */
+  outline(input: {knowledgeBaseId: string}): Promise<OutlineEntry[]>
   delete(input: {knowledgeBaseId: string}): Promise<void>
+}
+
+export type Centrality = 'core' | 'standard' | 'peripheral'
+
+/** One row of Sanity's real outline. Never humanize `path` — `title` is authored. */
+export type OutlineEntry = {
+  path: string
+  title: string
+  centrality: Centrality
+  /** tldr.scope — the one-line summary. */
+  summary: string
+  /** tldr.excludes — what this entry deliberately leaves to others. Prose. */
+  excludes?: string
+  /** tldr.neighbors — related paths. Often empty on small builds. */
+  neighbors: string[]
 }
 
 export type KnowledgeBaseStatus = {
@@ -50,5 +67,7 @@ export type KnowledgeBaseStatus = {
   isBuilding: boolean
   /** Real stage names from the build pipeline: tldr, map, triage, plan, … */
   stage?: string
+  /** Every stage with its status, for the stage line. */
+  stages?: {id: string; status: string}[]
   openIssueCount?: number
 }

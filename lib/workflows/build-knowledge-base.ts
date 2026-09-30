@@ -142,6 +142,7 @@ export async function runBuild(buildId: string): Promise<void> {
     // Stage E — bounded synthesis. Only retained material reaches the model.
     await db.patchRecord(buildId, {status: 'synthesizing'})
     await emit({type: 'synthesis.started'})
+    const synthesisStarted = Date.now()
     const {markdown, usage} = await synthesize({
       title: `${record.title} Knowledge Base`,
       purpose: record.purpose,
@@ -168,6 +169,7 @@ export async function runBuild(buildId: string): Promise<void> {
       type: 'synthesis.complete',
       outputTokens: estimateTokens(markdown),
       costUsd: usage.costUsd,
+      durationMs: Date.now() - synthesisStarted,
     })
 
     // Stage F — a real Sanity Knowledge Base.
@@ -188,14 +190,22 @@ export async function runBuild(buildId: string): Promise<void> {
 
     await db.patchRecord(buildId, {status: 'building_kb'})
     await kbProvider.build({knowledgeBaseId})
+    // isBuilding with no stage begun is the queue, which can last a long time.
+    // It gets its own state rather than a spinner pretending to progress.
+    await emit({type: 'sanity.kb.queued'})
 
     let lastStage: string | undefined
     for (let i = 0; i < 60; i++) {
       await new Promise((resolve) => setTimeout(resolve, 10_000))
       const status = await kbProvider.status({knowledgeBaseId})
-      if (status.stage !== lastStage) {
+      const startedStages = (status.stages ?? []).some((s) => s.status !== 'pending')
+      if (status.stage !== lastStage || status.stages) {
         lastStage = status.stage
-        await emit({type: 'sanity.kb.building', stage: status.stage})
+        await emit({
+          type: 'sanity.kb.building',
+          stage: startedStages ? status.stage : undefined,
+          stages: status.stages,
+        })
       }
       if (!status.isBuilding && status.state !== 'building') break
     }

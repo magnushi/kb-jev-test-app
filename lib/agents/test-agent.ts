@@ -7,6 +7,8 @@ export type AgentAnswer = {
   answer: string
   retrieved: number
   sources: {title: string; domain?: string}[]
+  /** Entry paths the retrieval tool was given, verbatim. Exact, not inferred. */
+  readPaths: string[]
 }
 
 /**
@@ -88,9 +90,24 @@ export async function askKnowledgeBase(input: {
   // Count real retrievals and name the entries actually read, so the
   // "N entries retrieved" line is never invented.
   const sources: {title: string; domain?: string}[] = []
+  const readPaths = new Set<string>()
   let retrieved = 0
+
   for (const block of message.content) {
+    // knowledge_base_read carries the paths it was asked for. Those are the
+    // exact outline paths, which is what makes read-highlighting defensible.
+    if (block.type === 'mcp_tool_use') {
+      const name = (block as {name?: string}).name
+      if (name === 'knowledge_base_read') {
+        const input = (block as {input?: {paths?: unknown}}).input
+        for (const path of Array.isArray(input?.paths) ? input.paths : []) {
+          if (typeof path === 'string') readPaths.add(path)
+        }
+      }
+      continue
+    }
     if (block.type !== 'mcp_tool_result') continue
+    // initial_context is orientation, not a source; only count entry reads.
     retrieved += 1
     const content = (block as {content?: unknown}).content
     if (Array.isArray(content)) {
@@ -105,7 +122,8 @@ export async function askKnowledgeBase(input: {
 
   return {
     answer: answer || 'The knowledge base returned nothing for that question.',
-    retrieved,
+    retrieved: readPaths.size > 0 ? readPaths.size : retrieved,
     sources: sources.slice(0, 8),
+    readPaths: [...readPaths],
   }
 }

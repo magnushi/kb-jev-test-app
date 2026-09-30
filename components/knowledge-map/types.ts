@@ -1,4 +1,6 @@
 import type {BuildEvent} from '../../lib/db/types.ts'
+import type {OutlineEntry} from '../../lib/agents/interfaces.ts'
+import {BUILD_STAGES, type BuildStageId} from './StageLine.tsx'
 
 export type ChunkNode = {
   id: string
@@ -26,9 +28,30 @@ export type MapState = {
   sections: Section[]
   /** Chunk currently under evaluation, for the enlarged focus state. */
   evaluating?: string
-  phase: 'idle' | 'fetching' | 'filtering' | 'synthesizing' | 'creating' | 'building' | 'ready' | 'failed'
+  phase:
+    | 'idle'
+    | 'fetching'
+    | 'filtering'
+    | 'synthesizing'
+    | 'creating'
+    | 'queued'
+    | 'building'
+    | 'ready'
+    | 'failed'
   knowledgeBaseId?: string
-  buildStage?: string
+  buildStage?: BuildStageId | 'queued'
+  /** Stages seen as done, so the stage line can strike them through. */
+  stagesDone: Set<string>
+  /** Client clock from the first building poll. The only time we show. */
+  buildStartedAt?: number
+  synthesisMs?: number
+  /** Sanity's own outline, fetched once at ready. */
+  outline?: OutlineEntry[]
+  outcome?: 'ready' | 'review'
+  openIssueCount?: number
+  /** Entry paths the test agent actually read, verbatim from retrieval. */
+  readPaths?: string[]
+  readQuestion?: string
   candidateTokens: number
   retainedTokens: number
   synthesizedTokens: number
@@ -41,6 +64,7 @@ export const emptyMapState: MapState = {
   chunks: {},
   sections: [],
   phase: 'idle',
+  stagesDone: new Set(),
   candidateTokens: 0,
   retainedTokens: 0,
   synthesizedTokens: 0,
@@ -124,11 +148,14 @@ export function applyEvent(state: MapState, event: BuildEvent): MapState {
     case 'synthesis.started':
       return {...state, phase: 'synthesizing'}
 
+    case 'sanity.kb.queued':
+      return {...state, phase: 'queued', buildStage: 'queued', buildStartedAt: state.buildStartedAt ?? Date.now()}
+
     case 'synthesis.section':
       return {...state, sections: [...state.sections, {title: event.title, sourceChunkIds: event.sourceChunkIds}]}
 
     case 'synthesis.complete':
-      return {...state, synthesizedTokens: event.outputTokens}
+      return {...state, synthesizedTokens: event.outputTokens, synthesisMs: event.durationMs}
 
     case 'sanity.kb.created':
       return {...state, phase: 'creating', knowledgeBaseId: event.knowledgeBaseId}
@@ -136,11 +163,35 @@ export function applyEvent(state: MapState, event: BuildEvent): MapState {
     case 'sanity.kb.importing':
       return {...state, phase: 'creating'}
 
-    case 'sanity.kb.building':
-      return {...state, phase: 'building', buildStage: event.stage}
+    case 'sanity.kb.building': {
+      const stage = (event.stage ?? undefined) as BuildStageId | undefined
+      const done = new Set(state.stagesDone)
+      // Everything before the current stage has been passed. A repeated stage
+      // adds nothing, which is the point: nothing new is claimed.
+      if (stage) {
+        done.add('queued')
+        for (const id of BUILD_STAGES) {
+          if (id === stage) break
+          done.add(id)
+        }
+      }
+      for (const s of event.stages ?? []) if (s.status === 'done') done.add(s.id)
+      return {
+        ...state,
+        phase: stage ? 'building' : 'queued',
+        buildStage: stage ?? 'queued',
+        stagesDone: done,
+        buildStartedAt: state.buildStartedAt ?? Date.now(),
+      }
+    }
 
     case 'sanity.kb.ready':
-      return {...state, phase: 'ready', buildStage: undefined}
+      return {
+        ...state,
+        phase: 'ready',
+        buildStage: undefined,
+        stagesDone: new Set(['queued', ...BUILD_STAGES]),
+      }
 
     case 'build.failed':
       return {...state, phase: 'failed', error: event.message}
@@ -156,6 +207,8 @@ export function statusLine(state: MapState): string {
   switch (state.phase) {
     case 'idle':
       return 'Describe a knowledge base on the left to start a build'
+    case 'queued':
+      return 'Queued at Sanity · waiting for a build slot'
     case 'fetching': {
       const pending = state.sources.filter((s) => !s.title && !s.failed)
       return pending.length > 0

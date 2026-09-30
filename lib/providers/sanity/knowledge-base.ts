@@ -1,6 +1,11 @@
 import {createClient, type SanityClient} from '@sanity/client'
 import {config} from '../../config.ts'
-import type {KnowledgeBaseProvider, KnowledgeBaseStatus} from '../../agents/interfaces.ts'
+import type {
+  Centrality,
+  KnowledgeBaseProvider,
+  KnowledgeBaseStatus,
+  OutlineEntry,
+} from '../../agents/interfaces.ts'
 
 const V = config.sanity.contextApiVersion
 
@@ -17,6 +22,9 @@ function kbClient(token: string, id: string): SanityClient {
     useCdn: false,
     useProjectHostname: false,
     resource: {type: 'knowledge-base', id},
+    // Reading entries and issues goes through the organization's document
+    // store, which needs the organization id as well as the resource.
+    context: {organizationId: config.sanity.organizationId},
   })
 }
 
@@ -88,8 +96,35 @@ export const sanityKnowledgeBaseProvider: KnowledgeBaseProvider = {
       state: kb.state,
       isBuilding: kb.isBuilding,
       stage: active,
+      stages,
       openIssueCount: (kb as {openIssueCount?: number}).openIssueCount,
     }
+  },
+
+  async outline({knowledgeBaseId}): Promise<OutlineEntry[]> {
+    const entries = await withFallback(
+      (token) => kbClient(token, knowledgeBaseId).context.entries.list(),
+      'entries.list',
+    )
+    type Tldr = {
+      scope?: string
+      excludes?: string
+      neighbors?: string[]
+      centrality?: Centrality
+    }
+    return entries
+      .filter((entry) => entry.status === 'filled')
+      .map((entry) => {
+        const tldr = entry.tldr as Tldr | undefined
+        return {
+          path: entry.path,
+          title: entry.title,
+          centrality: tldr?.centrality ?? 'standard',
+          summary: tldr?.scope ?? '',
+          excludes: tldr?.excludes,
+          neighbors: tldr?.neighbors ?? [],
+        }
+      })
   },
 
   async delete({knowledgeBaseId}) {

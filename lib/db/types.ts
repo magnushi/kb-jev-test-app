@@ -96,10 +96,11 @@ export type BuildEvent =
   | {type: 'jev.complete'; retainedTokens: number; droppedTokens: number; latencyMs: number; costUsd?: number}
   | {type: 'synthesis.started'}
   | {type: 'synthesis.section'; title: string; sourceChunkIds: string[]}
-  | {type: 'synthesis.complete'; outputTokens: number; costUsd?: number}
+  | {type: 'synthesis.complete'; outputTokens: number; costUsd?: number; durationMs?: number}
   | {type: 'sanity.kb.created'; knowledgeBaseId: string}
   | {type: 'sanity.kb.importing'}
-  | {type: 'sanity.kb.building'; stage?: string}
+  | {type: 'sanity.kb.queued'}
+  | {type: 'sanity.kb.building'; stage?: string; stages?: {id: string; status: string}[]}
   | {type: 'sanity.kb.ready'}
   | {type: 'build.failed'; message: string}
 
