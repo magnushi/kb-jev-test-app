@@ -19,17 +19,24 @@
 - [ ] Output budget proportional to retained input, rather than a flat cap.
 
 ## Phase 2 — UI
-- [ ] Next.js app, three columns, design tokens
-- [ ] Knowledge map driven by real BuildEvent stream
-- [ ] Build progress over Sanity live listeners
-- [ ] All knowledge bases list page
+- [x] Next.js app, three columns, design tokens
+- [x] Knowledge map driven by real BuildEvent stream
+- [x] Build progress (polled; live listeners would remove the poll)
+- [x] All knowledge bases list page
+- [x] Pipeline moved into a Sanity Function — it would have died on Vercel
+- [x] Scheduled reconciler for builds that outlive the function budget
+- [ ] Build-phase redesign — waiting on Claude Design (BUILD_PHASE_BRIEF.md)
 
 ## Phase 3 — metrics
 - [ ] Calibrate Jev thresholds against real pages
-- [ ] Per-source tallies, funnel strip from real telemetry
+- [x] Per-source tallies, funnel strip from real telemetry
 
 ## Phase 4 — hardening
-- [ ] Rate limits, 50-knowledge-base cap, daily spend kill switch
+- [x] Rate limits (global burst gate, one build per session)
+- [x] 50-knowledge-base cap with deletion
+- [ ] Daily spend kill switch (DAILY_DEMO_BUDGET_USD)
+- [ ] Tests: SSRF first, then chunking and the map reducer
+- [ ] README
 - [ ] Failed-build UI states
 - [ ] Rotate Jev and Anthropic keys before public launch
 

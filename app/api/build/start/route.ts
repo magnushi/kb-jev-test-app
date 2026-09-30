@@ -1,6 +1,5 @@
 import {NextResponse, type NextRequest} from 'next/server'
 import {createRecord} from '../../../../lib/db/knowledge-bases.ts'
-import {runBuild} from '../../../../lib/workflows/build-knowledge-base.ts'
 import {assertPublicUrl} from '../../../../lib/ingestion/fetch.ts'
 import {checkRateLimit, sessionIdFrom} from '../../../../lib/limits/index.ts'
 import {config} from '../../../../lib/config.ts'
@@ -55,8 +54,13 @@ export async function POST(request: NextRequest) {
       makerEmail: body.makerEmail?.trim().slice(0, 160) || undefined,
     })
 
-    // Fire and forget: progress is read back from persisted events.
-    void runBuild(record._id).catch((error) => console.error('[build]', record._id, error))
+    // Creating the record triggers the build-knowledge-base Sanity Function.
+    // Nothing is started here on purpose: a serverless function is torn down as
+    // soon as it responds, so work launched from a route handler would die with it.
+    if (config.runBuildsInline) {
+      const {runBuild} = await import('../../../../lib/workflows/build-knowledge-base.ts')
+      void runBuild(record._id).catch((error) => console.error('[build]', record._id, error))
+    }
 
     const response = NextResponse.json({buildId: record._id})
     if (setCookie) response.cookies.set(setCookie.name, setCookie.value, setCookie.options)

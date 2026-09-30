@@ -41,19 +41,38 @@ a CLI or run a separate worker — the pipeline runs anywhere Node runs.
 ## 2026-09-25 — Architecture
 
 **Long-running work runs in Sanity Functions; Vercel hosts the UI.** Functions allow up to
-900s at up to 10GB and can fan out via `invoke()`. Ingestion is triggered by creating a
-build document; a document Function picks it up.
+900s at up to 10GB. Creating the build record triggers the `build-knowledge-base`
+document Function. Nothing is started from the API route: a serverless function is torn
+down as soon as it responds, so work launched there dies with it. `RUN_BUILDS_INLINE=true`
+runs the pipeline in-process for local development only.
+
+A `reconcile-builds` scheduled Function runs every five minutes to finish builds whose
+Sanity build outlived the 900s budget, fail ones abandoned mid-pipeline, and enforce
+retention. Without it a record can wait forever on a build nobody is driving.
+
+**Durable Functions would fit better, when they ship.** `durableEventHandler` and
+`defineDurableFunction` exist in the packages — `step.run` with retries and
+`step.waitForCondition` for polling without holding a function open is exactly this
+problem's shape — but the definer is marked "not available publicly yet". Revisit then.
 
 **The app database is a Sanity dataset** (`vjematwb` / `production`), not Postgres.
 Knowledge bases live at the org level (`oVGkeJzXR`); the app's own records live in the
 project dataset. The knowledge itself stays in Sanity Knowledge Bases.
 
-**Build progress streams over Sanity live listeners, not SSE.** Every `BuildEvent` is a
-document, so a mid-build page refresh replays the knowledge map instead of showing a
-blank panel. SSE cannot do this without extra machinery.
+**Build progress is polled, not streamed.** Every `BuildEvent` is a document, so the
+client polls `/api/build/:id/events?after=N` and a mid-build refresh replays the whole
+knowledge map instead of showing a blank panel — which SSE could not do without extra
+machinery. Spec §8 permits polling first. Sanity live listeners would remove the poll and
+are the natural next step, but persistence, not transport, is what makes replay work.
 
-**Mastra for V1 orchestration**, per spec §5, with `TestAgent` / `IngestionRunner`
-interfaces so an Eve adapter can be added later without redesigning the app.
+**Mastra was not used, contrary to spec §5.** Ingestion is a bounded workflow in plain
+TypeScript, and the test agent reaches Context MCP through the Anthropic SDK's MCP
+connector. Mastra's value here would have been the agent loop and an MCP client, and the
+SDK supplies both, so it would have added a dependency without removing code. The spec's
+actual goal — a replaceable harness — is met by the `RelevanceGate`, `SearchProvider`,
+`KnowledgeBaseProvider` and `TestAgent` interfaces. **Open for review:** if the
+open-source story needs a named framework, Mastra can be introduced behind `TestAgent`
+without touching the UI or the pipeline.
 
 ## 2026-09-25 — Product
 

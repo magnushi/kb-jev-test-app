@@ -22,6 +22,13 @@ function required(name: string): string {
 }
 
 export const config = {
+  /**
+   * Local development only. In production the pipeline runs in the
+   * build-knowledge-base Sanity Function, triggered by the record's creation.
+   * A Vercel route cannot host it — the function dies when the response returns.
+   */
+  runBuildsInline: process.env.RUN_BUILDS_INLINE === 'true',
+
   jev: {
     apiKey: required('TYPESAFE_API_KEY'),
     model: process.env.JEV_MODEL ?? 'jev-latest',
