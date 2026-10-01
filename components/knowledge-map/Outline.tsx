@@ -25,6 +25,7 @@ export function Outline({
   question,
   openIssueCount,
   outcome,
+  conflicts,
 }: {
   entries: OutlineEntry[]
   purpose: string
@@ -32,6 +33,7 @@ export function Outline({
   question?: string
   openIssueCount?: number
   outcome?: 'ready' | 'review'
+  conflicts?: {found: number; resolved: number; by: ('sanity' | 'jev')[]; left: number}
 }) {
   const [active, setActive] = useState<string | null>(null)
   const [expandedTiers, setExpandedTiers] = useState<Set<Centrality>>(new Set())
@@ -57,6 +59,18 @@ export function Outline({
           Outline · <strong className="mono">{entries.length}</strong> entries
         </span>
       </div>
+
+      {conflicts && conflicts.resolved > 0 ? (
+        <p className="outline-conflicts">
+          Sanity found{' '}
+          <strong>
+            {conflicts.found} {conflicts.found === 1 ? 'conflict' : 'conflicts'} between sources
+          </strong>
+          . {conflicts.resolved} settled automatically
+          {conflicts.by.includes('jev') ? ' (Jev picked the clearer claim)' : ''}
+          {conflicts.left > 0 ? `, ${conflicts.left} left for a person` : ''}.
+        </p>
+      ) : null}
 
       {outcome === 'review' && openIssueCount ? (
         <p className="outline-issues">

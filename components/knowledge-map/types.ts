@@ -49,6 +49,8 @@ export type MapState = {
   outline?: OutlineEntry[]
   outcome?: 'ready' | 'review'
   openIssueCount?: number
+  /** How the build's conflicts were settled, so the UI never implies a person did it. */
+  conflicts?: {found: number; resolved: number; by: ('sanity' | 'jev')[]; left: number}
   /** Entry paths the test agent actually read, verbatim from retrieval. */
   readPaths?: string[]
   readQuestion?: string
@@ -184,6 +186,12 @@ export function applyEvent(state: MapState, event: BuildEvent): MapState {
         buildStartedAt: state.buildStartedAt ?? Date.now(),
       }
     }
+
+    case 'sanity.kb.conflicts':
+      return {
+        ...state,
+        conflicts: {found: event.found, resolved: event.resolved, by: event.by, left: event.left},
+      }
 
     case 'sanity.kb.ready':
       return {

@@ -23,6 +23,14 @@ export interface SearchProvider {
   discover(input: {topic: string; maxResults: number}): Promise<Candidate[]>
 }
 
+export interface ConflictArbiter {
+  /** Picks between two stated claims. Returns null when genuinely unsure. */
+  choose(input: {
+    purpose: string
+    conflict: Conflict
+  }): Promise<{side: number; score: number} | null>
+}
+
 export interface CandidateRanker {
   /**
    * Spec §4 Stage B step 5: choose ~3 from a wider candidate set. Judged on URL
@@ -36,6 +44,19 @@ export interface CandidateRanker {
   }): Promise<{ranked: (Candidate & {score: number})[]; usage: Usage; latencyMs: number}>
 }
 
+export type ConflictSide = {claim: string; value?: string; fromEntry: boolean}
+
+export type Conflict = {
+  id: string
+  claimKey?: string
+  scopePath?: string
+  severity?: string
+  issue: string
+  sides: ConflictSide[]
+  /** Sanity's own recommended side index, when it has one. */
+  suggested?: number
+}
+
 export interface KnowledgeBaseProvider {
   create(input: {title: string; purpose: string}): Promise<{id: string}>
   importMarkdown(input: {knowledgeBaseId: string; title: string; markdown: string}): Promise<{jobId: string}>
@@ -44,6 +65,9 @@ export interface KnowledgeBaseProvider {
   /** Sanity's outline, once a build has landed. Needs no MCP endpoint. */
   outline(input: {knowledgeBaseId: string}): Promise<OutlineEntry[]>
   delete(input: {knowledgeBaseId: string}): Promise<void>
+  openConflicts(input: {knowledgeBaseId: string}): Promise<Conflict[]>
+  /** `side` is an index into the conflict's `sides`. */
+  resolveConflict(input: {knowledgeBaseId: string; conflictId: string; side: number}): Promise<void>
 }
 
 export type Centrality = 'core' | 'standard' | 'peripheral'

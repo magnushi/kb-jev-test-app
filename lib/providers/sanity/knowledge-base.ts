@@ -2,6 +2,7 @@ import {createClient, type SanityClient} from '@sanity/client'
 import {config} from '../../config.ts'
 import type {
   Centrality,
+  Conflict,
   KnowledgeBaseProvider,
   KnowledgeBaseStatus,
   OutlineEntry,
@@ -125,6 +126,52 @@ export const sanityKnowledgeBaseProvider: KnowledgeBaseProvider = {
           neighbors: tldr?.neighbors ?? [],
         }
       })
+  },
+
+  async openConflicts({knowledgeBaseId}): Promise<Conflict[]> {
+    const issues = await withFallback(
+      (token) => kbClient(token, knowledgeBaseId).context.issues.list({status: 'open'}),
+      'issues.list',
+    )
+    type Content = {
+      kind?: string
+      claimKey?: string
+      scopePath?: string
+      severity?: string
+      issue?: string
+      suggested?: number
+      sides?: {claim?: string; value?: string; entryPaths?: string[]}[]
+    }
+    return (issues as unknown as {_id: string; content?: Content}[])
+      .filter((i) => i.content?.kind === 'conflict' && (i.content.sides?.length ?? 0) >= 2)
+      .map((i) => ({
+        id: i._id,
+        claimKey: i.content!.claimKey,
+        scopePath: i.content!.scopePath,
+        severity: i.content!.severity,
+        issue: i.content!.issue ?? '',
+        suggested: i.content!.suggested,
+        sides: (i.content!.sides ?? []).map((s) => ({
+          claim: s.claim ?? s.value ?? '',
+          value: s.value,
+          fromEntry: (s.entryPaths?.length ?? 0) > 0,
+        })),
+      }))
+  },
+
+  async resolveConflict({knowledgeBaseId, conflictId, side}) {
+    await withFallback(
+      (token) =>
+        // `resolution` is an index into the conflict's `sides`. The published
+        // type says 'keep_existing' | 'accept_new'; the server rejects both.
+        (
+          kbClient(token, knowledgeBaseId).context.issues.resolve as unknown as (p: {
+            issueId: string
+            resolution: number
+          }) => Promise<unknown>
+        )({issueId: conflictId, resolution: side}),
+      'issues.resolve',
+    )
   },
 
   async delete({knowledgeBaseId}) {

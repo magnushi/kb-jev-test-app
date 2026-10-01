@@ -306,3 +306,5 @@ details.sources summary { color: var(--muted); cursor: pointer; }
 .outline-toggle { display: flex; justify-content: flex-end; margin-bottom: 8px; }
 .outline-toggle.inline { margin-top: 10px; margin-bottom: 0; }
 .kb-status-live { color: var(--accent); }
+.outline-conflicts { margin: 0; font-size: var(--text-sm); color: var(--ink-2); }
+.outline-conflicts strong { color: var(--ink); font-weight: 500; }

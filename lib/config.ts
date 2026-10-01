@@ -77,5 +77,8 @@ export const config = {
   relevance: {
     keepAbove: 0.8,
     dropBelow: 0.2,
+    /** A conflict is only settled automatically when one claim is clearly ahead. */
+    conflictKeepAbove: 0.7,
+    conflictMargin: 0.2,
   },
 } as const

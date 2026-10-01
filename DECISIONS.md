@@ -86,3 +86,32 @@ Sanity Context, so the organization stays bounded. If the intent was display-onl
 **"Built by" is name-only in public.** The list page shows the maker's name; email is
 collected optionally, stored, and never rendered publicly. Resolves the question the
 design brief (§5.2) left open. The email field copy must say the email is not shown.
+
+## 2026-09-30 — Conflicts are settled automatically, within limits
+
+A build flags contradictions between its sources and leaves the knowledge base in
+`review`. Nobody owns a demo knowledge base, so those would sit unresolved forever.
+
+**Order of preference: Sanity's own suggestion, then Jev, then leave it open.**
+
+- `content.suggested` is Sanity's recommended side. Taking it defers to the product
+  rather than deciding for it.
+- With no suggestion, Jev picks between the sides. This is a decision over two *stated*
+  claims — `content.sides[]` carries each verbatim — not prose interpretation.
+- It must be confident (≥0.7) **and** clearly ahead (≥0.2 margin). Two plausible claims
+  scoring alike is exactly what a person should see, so those stay open.
+
+Each resolution becomes a standing instruction for every future build, which is why the
+thresholds are conservative and the UI names who decided rather than implying a person
+did.
+
+Validated against the four conflicts Magnus adjudicated by hand on kbt432byCXWQ: Jev
+agreed on three (0.77–0.95) and declined the fourth, which was the one where both claims
+were defensible and the real answer was "these sources use different words for the same
+physics" — something `resolve` cannot express.
+
+**`resolution` is an index into `content.sides`, not a string.** `@sanity/client` types it
+as `'keep_existing' | 'accept_new'` and the server rejects both with "expected number,
+received string". An out-of-range index returns a self-contradictory error: "Issue … is a
+'conflict' — only conflict issues can be resolved". Reported; the cast is isolated to the
+provider.

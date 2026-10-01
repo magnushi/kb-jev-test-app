@@ -1,7 +1,7 @@
 import {fetchPage} from '../ingestion/fetch.ts'
 import {extractReadableText} from '../ingestion/extract.ts'
 import {chunkText, estimateTokens, type Chunk} from '../ingestion/chunk.ts'
-import {jevRelevanceGate} from '../providers/jev/index.ts'
+import {jevConflictArbiter, jevRelevanceGate} from '../providers/jev/index.ts'
 import {synthesize} from '../ingestion/synthesize.ts'
 import {sanityKnowledgeBaseProvider as kbProvider} from '../providers/sanity/knowledge-base.ts'
 import * as db from '../db/knowledge-bases.ts'
@@ -210,6 +210,11 @@ export async function runBuild(buildId: string): Promise<void> {
       if (!status.isBuilding && status.state !== 'building') break
     }
 
+    // A build flags contradictions between its sources. Nobody owns a demo
+    // knowledge base, so unresolved conflicts would sit in `review` forever.
+    // Settle the clear ones, leave the rest for a person.
+    await settleConflicts({knowledgeBaseId, purpose: record.purpose, emit})
+
     metrics.elapsedMs = Date.now() - started
     metrics.estimatedCostUsd = (metrics.jevCostUsd ?? 0) + (metrics.llmCostUsd ?? 0)
     await db.patchRecord(buildId, {status: 'ready', metrics})
@@ -222,6 +227,65 @@ export async function runBuild(buildId: string): Promise<void> {
     await db.patchRecord(buildId, {status: 'failed', error: message, metrics})
     await emit({type: 'build.failed', message})
     throw error
+  }
+}
+
+/**
+ * Resolves the conflicts a build raised, preferring Sanity's own recommendation
+ * and falling back to Jev. Each resolution becomes a standing instruction for
+ * every future build, so anything genuinely close is left open rather than
+ * guessed at. Never fails the build.
+ */
+async function settleConflicts(input: {
+  knowledgeBaseId: string
+  purpose: string
+  emit: (event: BuildEvent) => Promise<void>
+}): Promise<void> {
+  try {
+    const conflicts = await kbProvider.openConflicts({knowledgeBaseId: input.knowledgeBaseId})
+    if (conflicts.length === 0) return
+
+    const by: ('sanity' | 'jev')[] = []
+    let left = 0
+
+    for (const conflict of conflicts) {
+      // Sanity's own suggestion first: deferring to the product beats deciding for it.
+      let side = conflict.suggested
+      let decidedBy: 'sanity' | 'jev' = 'sanity'
+
+      if (side === undefined) {
+        const choice = await jevConflictArbiter.choose({purpose: input.purpose, conflict})
+        if (!choice) {
+          left += 1
+          continue
+        }
+        side = choice.side
+        decidedBy = 'jev'
+      }
+
+      try {
+        await kbProvider.resolveConflict({
+          knowledgeBaseId: input.knowledgeBaseId,
+          conflictId: conflict.id,
+          side,
+        })
+        by.push(decidedBy)
+      } catch (error) {
+        console.warn('[conflicts] resolve failed', conflict.id, error)
+        left += 1
+      }
+    }
+
+    await input.emit({
+      type: 'sanity.kb.conflicts',
+      found: conflicts.length,
+      resolved: by.length,
+      by,
+      left,
+    })
+  } catch (error) {
+    // A knowledge base with open conflicts is still usable.
+    console.warn('[conflicts] skipped', error)
   }
 }
 

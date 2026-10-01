@@ -362,6 +362,7 @@ export function Lab({initialCount}: {initialCount: number}) {
                   question={map.readQuestion}
                   openIssueCount={map.openIssueCount}
                   outcome={map.outcome}
+                  conflicts={map.conflicts}
                 />
               </div>
             ) : (

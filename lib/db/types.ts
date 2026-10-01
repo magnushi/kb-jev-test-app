@@ -101,6 +101,15 @@ export type BuildEvent =
   | {type: 'sanity.kb.importing'}
   | {type: 'sanity.kb.queued'}
   | {type: 'sanity.kb.building'; stage?: string; stages?: {id: string; status: string}[]}
+  | {
+      type: 'sanity.kb.conflicts'
+      found: number
+      resolved: number
+      /** Who settled each one, so the UI never implies a person did. */
+      by: ('sanity' | 'jev')[]
+      /** Left open because no claim was clearly ahead. */
+      left: number
+    }
   | {type: 'sanity.kb.ready'}
   | {type: 'build.failed'; message: string}
 

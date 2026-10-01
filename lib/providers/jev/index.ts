@@ -2,6 +2,8 @@ import {config} from '../../config.ts'
 import type {
   Candidate,
   CandidateRanker,
+  Conflict,
+  ConflictArbiter,
   RelevanceDecision,
   RelevanceGate,
   Usage,
@@ -153,3 +155,53 @@ function safeHost(url: string): string | null {
 }
 
 export type {Candidate}
+
+/**
+ * Picks between the two claims a build flagged as contradictory.
+ *
+ * This is a decision over two stated options, not prose interpretation: the
+ * conflict carries each side's claim verbatim. Below the threshold it returns
+ * null and the conflict stays open for a person, because resolving one writes a
+ * standing instruction into every future build.
+ */
+export const jevConflictArbiter: ConflictArbiter = {
+  async choose({purpose, conflict}) {
+    if (conflict.sides.length < 2) return null
+
+    const questions = Object.fromEntries(
+      conflict.sides.map((side, index) => [
+        `side_${index}`,
+        {
+          type: 'noul',
+          instructions: {
+            disagreement: conflict.issue,
+            candidate_claim: side.claim,
+            question:
+              'Is `candidate_claim` the accurate one, judged on factual correctness and ' +
+              'precision rather than on which source said it?',
+          },
+        },
+      ]),
+    )
+
+    const res = await callJev({
+      model: config.jev.model,
+      state: `Knowledge base purpose: ${purpose}`,
+      questions,
+    })
+
+    const scored = conflict.sides
+      .map((_, index) => ({side: index, score: res.answers[`side_${index}`]?.noul ?? 0}))
+      .sort((a, b) => b.score - a.score)
+
+    const best = scored[0]
+    const runnerUp = scored[1]
+    if (!best || !runnerUp) return null
+
+    // Needs to be confident *and* clearly ahead. Two plausible claims scoring
+    // alike is exactly the case a person should see.
+    if (best.score < config.relevance.conflictKeepAbove) return null
+    if (best.score - runnerUp.score < config.relevance.conflictMargin) return null
+    return best
+  },
+}
