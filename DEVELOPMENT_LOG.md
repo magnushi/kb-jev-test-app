@@ -313,3 +313,67 @@ not measured. The event-stream fold exists to make that structurally impossible.
 **Correct yourself in writing.** Two findings sent to Design were wrong. Both were
 corrected in the same document rather than quietly, because they had already changed
 what Design was building.
+
+---
+
+## October 3 — Redundancy: a clean negative result
+
+Three sources on one topic say the same things. NIST, IBM and Wikipedia all define a
+qubit. Our gate judges each chunk independently against the purpose, so every duplicate
+explanation scores high and all three survive. Paying Opus to read the same definition
+three times is exactly the waste the pipeline exists to prevent — so a third question
+looked like the missing discriminator.
+
+Two passes: relevance and substance first, then each surviving chunk against everything
+kept before it, asking whether a reader of what we already have would learn anything new.
+
+**It dropped nothing. 0 of 35 chunks.**
+
+And the scores say why:
+
+```
+0.04  nist.gov          At its most fundamental level, a computer is…
+0.07  ibm.com           A qubit, or quantum bit, is the basic…     ← after NIST defined qubits
+0.09  en.wikipedia.org  A binary digit, characterized as 0 or…
+0.03  en.wikipedia.org  charge
+```
+
+Every score between 0.03 and 0.12, with no spread. Jev is confident, consistently, that
+each chunk adds something — and on inspection it is right: overlapping topics still carry
+different figures, caveats and framings.
+
+The question could be loosened until it started dropping things. That would be tuning
+until the measurement says what we want, which is the failure mode this project has
+tried to avoid. **Recorded as a negative result and dropped.**
+
+It also cost $0.004 against pass one's $0.0015 — three times the price — because
+redundancy has to run sequentially with growing context rather than in one parallel
+batch. Triple the cost for nothing.
+
+### What the experiment did produce
+
+With three *varied* sources rather than three similar ones, the two-Noul gate withheld
+**19%**, up from 10%. It drops `"charge"`, `"This article is about the quantum computing
+unit"`, image credits and framing paragraphs. The gate scales with how uneven the
+sources are, which is the right behaviour.
+
+### Both fixes landed
+
+**The two-Noul gate is in production.** A chunk must be relevant (≥0.6) *and*
+substantive (≥0.5). The second question is free — Jev evaluates every question against
+`state` in parallel — though the batch halved to 12 chunks to stay inside the 32k limit.
+
+**Synthesis output is now proportional to retained input**, capped at 60% of it rather
+than a flat 12k, with the prompt told plainly that the result must be shorter than its
+material. The inverted funnel was a flat budget giving the model no reason to compress.
+
+### Where that leaves the argument
+
+The token funnel will show roughly 10–20% withheld on real builds. That is honest and it
+is not dramatic. The measured, striking number remains cost asymmetry: Jev decides
+everything Opus is allowed to see for about 0.3% of what a build costs, and it also
+chooses which 3 of 8 candidate sources are fetched at all — a decision with far more
+leverage than any chunk.
+
+Whether the centre column should lead with that rather than with volume is a question for
+Claude Design, and now one backed by three measurements rather than an opinion.

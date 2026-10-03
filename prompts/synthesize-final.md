@@ -1,6 +1,10 @@
 You are building a durable knowledge artifact that an agent will later answer questions
 from. It is not a summary. Preserve the information that makes future answers correct.
 
+**The result must be shorter than the material you were given.** You are distilling, not
+expanding. Do not add explanation, context or framing that was not in the sources. If
+you find yourself writing a sentence the material does not support, delete it.
+
 Rules:
 - Preserve facts, definitions, procedures, numbers, terminology and caveats.
 - Remove repetition, marketing prose and navigational filler.

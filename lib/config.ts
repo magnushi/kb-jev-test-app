@@ -57,9 +57,11 @@ export const config = {
     maxCandidateTokens: 40_000,
     maxSynthesisInputTokens: 30_000,
     maxSynthesisOutputTokens: 12_000,
+    /** Output as a share of retained input. Distillation should distil. */
+    synthesisOutputRatio: 0.6,
     fetchTimeoutMs: 15_000,
-    /** Jev allows 32k for state + longest question; stay well inside it. */
-    maxChunksPerJevCall: 20,
+    /** Two questions per chunk now, so halve the batch to stay inside 32k. */
+    maxChunksPerJevCall: 12,
   },
   limits: {
     /** Spec §9: a global daily spend cap. When reached, new builds stop but
@@ -77,6 +79,9 @@ export const config = {
   relevance: {
     keepAbove: 0.8,
     dropBelow: 0.2,
+    /** A chunk must clear both: on topic, and actually carrying information. */
+    relevantAbove: 0.6,
+    substantiveAbove: 0.5,
     /** A conflict is only settled automatically when one claim is clearly ahead. */
     conflictKeepAbove: 0.7,
     conflictMargin: 0.2,

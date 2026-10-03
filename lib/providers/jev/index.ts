@@ -16,15 +16,35 @@ type JevResponse = {
   usage: {input_tokens: number; output_tokens: number}
 }
 
-const QUESTION =
-  'Does `candidate_text` contain information worth retaining for this knowledge base? ' +
-  'Answer yes for substantive facts, definitions, procedures, caveats and terminology. ' +
-  'Answer no for navigation, boilerplate, cookie notices, newsletter prompts, ' +
-  'legal footers and marketing filler.'
+/**
+ * Two questions per chunk, not one. Asking only "is this relevant?" of a chunk from a
+ * page about the topic gets a correct yes every time — measured at 0% withheld on two
+ * real builds. Substance is what discriminates: an introductory paragraph is highly
+ * relevant and carries nothing.
+ *
+ * Both ride in the same request, so the second question is free: Jev evaluates every
+ * question against `state` in parallel.
+ */
+const RELEVANT =
+  'Given the Knowledge Base purpose, does `candidate_text` contain information that ' +
+  'should be retained for the Knowledge Base?'
 
-function classify(score: number): RelevanceDecision['decision'] {
-  if (score >= config.relevance.keepAbove) return 'keep'
-  if (score < config.relevance.dropBelow) return 'drop'
+const SUBSTANTIVE =
+  'Does `candidate_text` carry specific, citable information — facts, figures, ' +
+  'definitions, procedures, caveats, named entities? Answer no if it is mainly ' +
+  'introductory framing, a table of contents, a transition, a restatement of something ' +
+  'obvious, navigation, promotional language, or a call to action.'
+
+/**
+ * A chunk must clear both bars. The score shown in the UI is the relevance one,
+ * which is what the map's tooltip means by P(yes).
+ */
+function classify(relevance: number, substance: number): RelevanceDecision['decision'] {
+  if (relevance < config.relevance.relevantAbove) return 'drop'
+  if (substance < config.relevance.substantiveAbove) return 'drop'
+  if (relevance >= config.relevance.keepAbove && substance >= config.relevance.keepAbove) {
+    return 'keep'
+  }
   return 'uncertain'
 }
 
@@ -59,21 +79,30 @@ export const jevRelevanceGate: RelevanceGate = {
     const size = config.budgets.maxChunksPerJevCall
     for (let i = 0; i < chunks.length; i += size) {
       const batch = chunks.slice(i, i + size)
-      const questions = Object.fromEntries(
-        batch.map((c) => [
-          `keep_${c.id}`,
-          {type: 'noul', instructions: {candidate_text: c.text, question: QUESTION}},
-        ]),
-      )
+      const questions: Record<string, unknown> = {}
+      for (const c of batch) {
+        questions[`rel_${c.id}`] = {
+          type: 'noul',
+          instructions: {candidate_text: c.text, question: RELEVANT},
+        }
+        questions[`sub_${c.id}`] = {
+          type: 'noul',
+          instructions: {candidate_text: c.text, question: SUBSTANTIVE},
+        }
+      }
       const res = await callJev({
         model: config.jev.model,
         state: `Knowledge base purpose: ${purpose}\nTopic: ${topic}`,
         questions,
       })
       for (const c of batch) {
-        const answer = res.answers[`keep_${c.id}`]
-        if (!answer) throw new Error(`Jev returned no answer for chunk ${c.id}`)
-        decisions[c.id] = {score: answer.noul, decision: classify(answer.noul)}
+        const relevance = res.answers[`rel_${c.id}`]
+        const substance = res.answers[`sub_${c.id}`]
+        if (!relevance || !substance) throw new Error(`Jev returned no answer for chunk ${c.id}`)
+        decisions[c.id] = {
+          score: relevance.noul,
+          decision: classify(relevance.noul, substance.noul),
+        }
       }
       usage.inputTokens += res.usage.input_tokens
       usage.outputTokens += res.usage.output_tokens
