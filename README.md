@@ -164,6 +164,8 @@ knowledge-base-lab-design/   the design package this was built from
 `docs/integration-notes.md` records every external contract as verified against the live
 API, including where the documentation and the behaviour differ. `DECISIONS.md` records
 the architectural choices and where they depart from the original spec.
+`DEVELOPMENT_LOG.md` is the narrative: what we measured, what surprised us, and what we
+got wrong.
 
 ## Status
 
